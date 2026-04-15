@@ -1,0 +1,119 @@
+@import "tailwindcss";
+
+:root {
+  --background: #abb0db;
+  --foreground: #1a1a1a;
+  --surface: #ffffff;
+  --accent: #b7bce8;
+  --accent-hover: #9fa8e4;
+  --accent-light: #d1e9f6;
+  --accent-green: #e1f0d7;
+  --accent-pink: #f9d8e6;
+  --border: rgba(26, 26, 26, 0.08);
+  --sidebar: #2d2d2d;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-inter);
+
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-light: var(--accent-light);
+  --color-accent-green: var(--accent-green);
+  --color-accent-pink: var(--accent-pink);
+  --color-surface: var(--surface);
+  --color-sidebar: var(--sidebar);
+}
+
+body {
+  background: #f7f8fc;
+  color: var(--foreground);
+  font-family: var(--font-inter), Arial, Helvetica, sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display), var(--font-inter), Arial, Helvetica, sans-serif;
+}
+
+/* Form controls on light surfaces must not inherit body color */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+textarea,
+select {
+  color: #18181b;
+  background-color: #ffffff;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #71717a;
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #18181b;
+  transition: background-color 9999s ease-out;
+}
+
+/* ─── Block editor: contenteditable placeholder ──────────────────────────────
+   Shows data-placeholder text when the element is empty and not focused.
+   Using :empty + :not(:focus) to avoid flicker during typing.             */
+[contenteditable][data-placeholder]:empty::before {
+  content: attr(data-placeholder);
+  color: #a1a1aa; /* zinc-400 */
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+[contenteditable][data-placeholder]:empty:focus::before {
+  content: attr(data-placeholder);
+  color: #d4d4d8; /* zinc-300 — dimmer when focused */
+}
+
+/* Make contenteditable outline invisible — we handle focus styles ourselves */
+[contenteditable]:focus {
+  outline: none;
+}
+
+/* ─── Drag-over highlight ─────────────────────────────────────────────────── */
+.block-drop-target {
+  border-top: 2px solid var(--accent);
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float-card {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.landing-fade-up {
+  animation: fade-up 0.7s ease-out both;
+}
+
+.landing-float {
+  animation: float-card 7s ease-in-out infinite;
+}
