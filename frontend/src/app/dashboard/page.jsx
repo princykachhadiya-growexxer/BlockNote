@@ -68,7 +68,7 @@ export default function DashboardPage() {
       }
       setLoadError("Could not load your workspace data.");
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -122,9 +122,9 @@ export default function DashboardPage() {
         : {
             ...current,
             documents: current.documents.map((doc) =>
-              doc.id === id ? { ...doc, isStarred: !doc.isStarred } : doc
+              doc.id === id ? { ...doc, isStarred: !doc.isStarred } : doc,
             ),
-          }
+          },
     );
 
     try {
@@ -135,9 +135,9 @@ export default function DashboardPage() {
           : {
               ...current,
               documents: current.documents.map((doc) =>
-                doc.id === id ? { ...doc, isStarred: result.isStarred } : doc
+                doc.id === id ? { ...doc, isStarred: result.isStarred } : doc,
               ),
-            }
+            },
       );
     } catch (err) {
       setAnalytics(previous);
@@ -198,8 +198,8 @@ export default function DashboardPage() {
                 Documents, activity, and everything worth revisiting
               </h1>
               <p className="mt-3 max-w-2xl text-sm leading-7 text-[#1A1A1A]/68">
-                Keep track of your writing space, see how often pages get shared, and move clutter
-                into Trash without losing it.
+                Keep track of your writing space, see how often pages get
+                shared, and move clutter into Trash without losing it.
               </p>
             </div>
 
@@ -228,7 +228,9 @@ export default function DashboardPage() {
               key={card.key}
               className={`rounded-[1.6rem] border border-[var(--edge)] ${card.tone} p-5 shadow-[0_18px_50px_rgba(74,83,120,0.08)]`}
             >
-              <p className="text-sm font-medium text-[#1A1A1A]/62">{card.label}</p>
+              <p className="text-sm font-medium text-[#1A1A1A]/62">
+                {card.label}
+              </p>
               <p className="mt-3 text-3xl font-semibold text-[#1A1A1A]">
                 {analytics?.totals?.[card.key] ?? 0}
               </p>
@@ -254,7 +256,9 @@ export default function DashboardPage() {
 
           {documents.length === 0 ? (
             <div className="mt-6 rounded-[1.75rem] border border-[var(--edge)] bg-[var(--surface)] p-10 text-center shadow-[0_18px_50px_rgba(74,83,120,0.08)]">
-              <p className="text-base font-medium text-[var(--foreground)]">No documents yet.</p>
+              <p className="text-base font-medium text-[var(--foreground)]">
+                No documents yet.
+              </p>
               <p className="mt-2 text-sm text-[var(--muted)]">
                 Create your first page to start building your block workspace.
               </p>
@@ -276,9 +280,19 @@ export default function DashboardPage() {
                           ? "bg-[#B7BCE8] text-[#1A1A1A]"
                           : "bg-[#F6F8FD] text-[var(--muted)] hover:bg-[#D1E9F6] hover:text-[#1A1A1A]"
                       } disabled:opacity-60`}
-                      aria-label={doc.isStarred ? "Remove star from document" : "Star document"}
+                      aria-label={
+                        doc.isStarred
+                          ? "Remove star from document"
+                          : "Star document"
+                      }
                     >
-                      <svg className="h-4 w-4" viewBox="0 0 20 20" fill={doc.isStarred ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.5">
+                      <svg
+                        className="h-4 w-4"
+                        viewBox="0 0 20 20"
+                        fill={doc.isStarred ? "currentColor" : "none"}
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                      >
                         <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 0 0 .95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 0 0-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.539 1.118l-2.8-2.034a1 1 0 0 0-1.176 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 0 0-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81H7.03a1 1 0 0 0 .95-.69l1.07-3.292Z" />
                       </svg>
                     </button>
@@ -309,25 +323,30 @@ export default function DashboardPage() {
                           {doc.title}
                         </button>
                       )}
-
                       <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                        <div className="rounded-2xl bg-[#F6F8FD] px-3 py-3">
+                        <div className="rounded-2xl bg-[var(--bgCol)]  px-3 py-3">
                           <p className="text-[11px] uppercase tracking-[0.2em] text-[var(--muted)]">
                             Shares
                           </p>
-                          <p className="mt-1 text-lg font-semibold text-[#1A1A1A]">{doc.shareCount}</p>
+                          <p className="mt-1 text-lg font-semibold text-[var(--foreground)]">
+                            {doc.shareCount}
+                          </p>
                         </div>
-                        <div className="rounded-2xl bg-[#D1E9F6]/60 px-3 py-3">
+
+                        <div className="rounded-2xl bg-[var(--accent-light)] px-3 py-3">
                           <p className="text-[11px] uppercase tracking-[0.2em] text-[var(--muted)]">
                             Blocks
                           </p>
-                          <p className="mt-1 text-lg font-semibold text-[#1A1A1A]">{doc.blockCount}</p>
+                          <p className="mt-1 text-lg font-semibold text-[var(--foreground)]">
+                            {doc.blockCount}
+                          </p>
                         </div>
-                        <div className="rounded-2xl bg-[#E1F0D7]/70 px-3 py-3">
+
+                        <div className="rounded-2xl bg-[var(--accent-green)] px-3 py-3">
                           <p className="text-[11px] uppercase tracking-[0.2em] text-[var(--muted)]">
                             Starred
                           </p>
-                          <p className="mt-1 text-lg font-semibold text-[#1A1A1A]">
+                          <p className="mt-1 text-lg font-semibold text-[var(--foreground)]">
                             {doc.isStarred ? "Yes" : "No"}
                           </p>
                         </div>
