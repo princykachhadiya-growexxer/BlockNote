@@ -51,6 +51,7 @@ export default function BlockEditor({ docId, initialTitle, shareToken }) {
   const titleAbort = useRef(null);
   const dragState = useRef(null);
   const toastTimerRef = useRef(null);
+  const handledHashRef = useRef(null);
 
   const sortedBlocks = useMemo(
     () => [...blocks].sort((a, b) => a.order_index - b.order_index),
@@ -118,6 +119,23 @@ export default function BlockEditor({ docId, initialTitle, shareToken }) {
       el.focus();
     }
   }, [focusedId, blocks]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !sortedBlocks.length) return;
+    const hash = window.location.hash;
+    if (!hash.startsWith("#block-")) return;
+    if (handledHashRef.current === hash) return;
+
+    const blockId = hash.slice(7);
+    const target = document.getElementById(`block-${blockId}`);
+    if (!target) return;
+
+    requestAnimationFrame(() => {
+      target.scrollIntoView({ block: "center", behavior: "smooth" });
+      setFocusedId(blockId);
+      handledHashRef.current = hash;
+    });
+  }, [sortedBlocks]);
 
   useEffect(() => {
     const pendingSaveMap = pendingSaves.current;
@@ -658,7 +676,6 @@ export default function BlockEditor({ docId, initialTitle, shareToken }) {
                 draggable
                 onDragStart={(e) => handleDragStart(e, block.id)}
                 onDragEnd={handleDragEnd}
-                onMouseDown={(e) => e.preventDefault()}
                 className="mt-0.5 flex shrink-0 cursor-grab items-center rounded-lg p-1 text-zinc-400 opacity-0 transition hover:bg-zinc-100 hover:text-zinc-700 group-hover/row:opacity-100 active:cursor-grabbing"
                 aria-label="Drag block"
               >

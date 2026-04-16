@@ -25,6 +25,7 @@ export default function Block({
   const [slashState, setSlashState] = useState(null);
   const [toolbarRect, setToolbarRect] = useState(null);
   const suppressNextInputSave = useRef(false);
+  const suppressNextEnter = useRef(false);
 
   useEffect(() => {
     registerRef(block.id, editableRef);
@@ -35,9 +36,7 @@ export default function Block({
     const el = editableRef.current;
     if (!el || NON_EDITABLE_TYPES.has(block.type)) return;
 
-    const nextHtml = block.type === "code"
-      ? escapeHtml(block.content?.text ?? "").replaceAll("\n", "<br>")
-      : getEditorHtml(block.content);
+    const nextHtml = getRenderableHtml(block.type, block.content);
 
     if (document.activeElement === el) return;
     if (el.innerHTML !== nextHtml) {
@@ -91,7 +90,7 @@ export default function Block({
 
   if (block.type === "divider") {
     return (
-      <div className="group relative my-4 flex cursor-default items-center" onClick={onFocus}>
+      <div id={`block-${block.id}`} className="group relative my-4 flex cursor-default items-center scroll-mt-28" onClick={onFocus}>
         <hr className="w-full border-zinc-300" />
       </div>
     );
@@ -99,12 +98,14 @@ export default function Block({
 
   if (block.type === "image") {
     return (
-      <ImageBlock
-        key={`${block.id}:${block.content?.url ?? ""}`}
-        block={block}
-        onFocus={onFocus}
-        onChange={onChange}
-      />
+      <div id={`block-${block.id}`} className="scroll-mt-28">
+        <ImageBlock
+          key={`${block.id}:${block.content?.url ?? ""}`}
+          block={block}
+          onFocus={onFocus}
+          onChange={onChange}
+        />
+      </div>
     );
   }
 
@@ -164,6 +165,7 @@ export default function Block({
   }
 
   function handleSlashSelect(commandId) {
+    suppressNextEnter.current = true;
     closeSlash(true);
     if (commandId !== block.type) {
       onConvert(block.id, commandId);
@@ -227,6 +229,16 @@ export default function Block({
     if (!el) return;
 
     if (slashState && ["ArrowUp", "ArrowDown", "Enter", "Escape"].includes(e.key)) {
+      e.preventDefault();
+      if (e.key === "Escape") {
+        closeSlash(true);
+      }
+      return;
+    }
+
+    if (e.key === "Enter" && suppressNextEnter.current) {
+      e.preventDefault();
+      suppressNextEnter.current = false;
       return;
     }
 
@@ -234,6 +246,9 @@ export default function Block({
       e.preventDefault();
       const payload = buildSplitPayload();
       if (payload) {
+        if (!payload.atEnd) {
+          applyContentToElement(el, block.type, payload.leftContent);
+        }
         onEnter(block.id, payload);
       }
       return;
@@ -272,6 +287,8 @@ export default function Block({
   }
 
   function handleInput(e) {
+    suppressNextEnter.current = false;
+
     if (suppressNextInputSave.current) {
       suppressNextInputSave.current = false;
       return;
@@ -320,7 +337,8 @@ export default function Block({
   const editableClass = getEditableClass(block.type);
 
   return (
-    <div className="group relative flex items-start gap-2">
+    <div id={`block-${block.id}`} className="group relative scroll-mt-28">
+      <div className="relative flex items-start gap-2">
       {block.type === "todo" && (
         <input
           type="checkbox"
@@ -362,6 +380,7 @@ export default function Block({
           onClose={() => closeSlash(true)}
         />
       )}
+      </div>
     </div>
   );
 }
@@ -495,6 +514,23 @@ function placeCaretAtEnd(el) {
   range.collapse(false);
   selection?.removeAllRanges();
   selection?.addRange(range);
+}
+
+function getRenderableHtml(type, content) {
+  if (type === "code") {
+    return escapeHtml(content?.text ?? "").replaceAll("\n", "<br>");
+  }
+
+  return getEditorHtml(content);
+}
+
+function applyContentToElement(el, type, content) {
+  if (type === "code") {
+    el.textContent = content?.text ?? "";
+    return;
+  }
+
+  el.innerHTML = getRenderableHtml(type, content);
 }
 
 function isAtStartOfElement(el, range) {
