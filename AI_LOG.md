@@ -1,4 +1,4 @@
-## 13-04-2026
+## 📅 13-04-2026
 
 ### Entry 1
 **Tool:** Claude  
@@ -93,7 +93,7 @@ None
 None  
 
 
-## 14-04-2026
+## 📅 14-04-2026
 
 ### Entry 1
 **Tool:** Codex  
@@ -204,7 +204,7 @@ None
 - Switched rendering logic to respect block.type dynamically  
 
 
-## 15-04-2026
+## 📅 15-04-2026
 
 ### Entry 1
 **Tool:** Codex  
@@ -296,7 +296,7 @@ None
 - Handled empty state for starred items  
  
 
-## 16-04-2026
+## 📅 16-04-2026
 
 ### Entry 1
 
@@ -356,7 +356,7 @@ None
 
 ---
 
-### Entry - 3
+### Entry 3
 
 **Tool:** Codex  
 **Task:** Identify and analyze critical editor and API issues  
@@ -383,8 +383,9 @@ None
 **Fixes Applied:**  
 None  
 
+---
 
-### Entry - 4
+### Entry 4
 
 **Tool:** Codex  
 **Task:** Fix editor behavior, API failures, and document lifecycle  
