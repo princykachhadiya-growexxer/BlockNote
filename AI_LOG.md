@@ -204,7 +204,6 @@ None
 - Switched rendering logic to respect block.type dynamically  
 
 
-
 ## 15-04-2026
 
 ### Entry 1
@@ -227,4 +226,200 @@ None
 
 **Fixes Applied:**  
 None  
+
+---
+
+### Entry 2
+
+**Tool:** Codex  
+**Task:** Add star functionality and fix authentication with full-stack integration  
+
+### Prompt
+"Act as a senior full-stack engineer working on an existing Notion-like web application. Add backend-integrated star functionality and fix authentication flow to match the backend. Do not rebuild the project. Implement user-specific starred data, secure APIs, proper UI updates, sidebar integration, and a redesigned login/register experience with a consistent design system and improved UX."
+
+### Output Summary
+- Added full-stack star functionality with backend support
+- Implemented user-specific starred data with proper authorization
+- Created/updated APIs for toggling and fetching starred items
+- Integrated star UI with optimistic updates in frontend
+- Added "Starred" section in sidebar with navigation support
+- Redesigned login and register pages with consistent UI system
+- Fixed authentication flow (login, register, token handling, protected routes)
+- Improved state management and backend sync for reliable data flow
+- Added error handling and edge case coverage
+
+**Issues Found:**  
+- Prisma schema mismatch causing relation errors in star functionality  
+- Block fetching service returning invalid or inconsistent data  
+- /auth/me endpoint not returning correct user data  
+- JWT middleware not properly validating or attaching user context  
+- Frontend not fully syncing with backend state  
+- Missing optimistic UI handling for star toggle  
+- No handling for failed star toggle (UI not reverting)  
+- Unauthorized access not redirecting to login  
+- Empty starred list not handled properly  
+
+**Fixes Applied:**  
+- Fixed Prisma schema relations to correctly map user and starred data  
+- Updated block fetching service to return consistent and valid responses  
+- Corrected /auth/me endpoint to return authenticated user data  
+- Fixed JWT middleware to properly validate token and attach user info  
+- Synced frontend state management with backend responses   
+
+---
+
+### Entry 3
+
+**Tool:** Codex  
+**Task:** Fix star UI behavior and handle edge cases  
+
+### Prompt
+"Fix the star toggle behavior in the existing application. Implement optimistic UI updates so the star state updates instantly, add rollback logic if the API request fails, handle unauthorized responses by redirecting the user to the login page, and show a proper empty state when no starred items are available. Ensure smooth frontend-backend synchronization without rebuilding the project."
+
+### Output Summary
+- Improved star toggle UX with optimistic updates
+- Added rollback mechanism for failed API calls
+- Implemented redirect to login on unauthorized access
+- Added empty state UI for no starred items
+- Enhanced frontend-backend sync for better reliability
+
+**Issues Found:**  
+- Star UI was not updating instantly  
+- No rollback when API call failed  
+- Unauthorized users were not redirected properly  
+- No empty state handling for starred list  
+
+**Fixes Applied:**  
+- Implemented optimistic UI updates for star toggle  
+- Added rollback logic for failed star actions  
+- Added redirect handling for unauthorized users  
+- Handled empty state for starred items  
+ 
+
+## 16-04-2026
+
+### Entry 1
+
+**Tool:** Codex  
+**Task:** Fix block transformation and drag-and-drop functionality  
+
+### Prompt
+"Act as a senior full-stack engineer working on an existing Notion-like application. Fix the block editor behavior so that when a user types '/' and selects a block type, the current block transforms instead of creating a new one below. Maintain cursor position correctly. Also fix the drag-and-drop functionality so blocks can be reordered properly using the drag handle. Ensure smooth UX and proper state synchronization without rebuilding the project."
+
+### Output Summary
+- Fixed slash command behavior to transform current block instead of creating a new one
+- Maintained cursor position after block transformation
+- Removed unnecessary extra block creation
+- Implemented working drag-and-drop functionality for block reordering
+- Synced block order changes with backend
+- Improved overall editor UX and interaction flow
+
+**Issues Found:**  
+- Slash command was creating a new block instead of transforming the current one  
+- Cursor was moving to a new block unexpectedly  
+- Extra unnecessary blocks were being created  
+- Drag-and-drop functionality was not working despite visible drag handle  
+
+**Fixes Applied:**  
+- Updated editor logic to transform the current block on slash command  
+- Fixed cursor handling to remain in the transformed block  
+- Prevented unintended block creation  
+- Implemented proper drag-and-drop logic for reordering blocks  
+- Synced reordered state with backend  
+
+---
+
+### Entry 2
+**Tool:** Codex  
+**Task:** Add trash, starred filters, and analytics APIs  
+
+### Prompt
+"Act as a senior full-stack engineer working on an existing Notion-like application. Add support for trash (soft delete), starred filtering, and analytics APIs. Implement query-based filtering for documents and blocks using ?starred=true and ?trashed=true. Also create an analytics endpoint to return total documents, deleted documents, total blocks, and share count per document. Do not rebuild the project. Ensure clean architecture and production-ready implementation."
+
+### Output Summary
+- Added soft delete (trashed flag) for documents
+- Implemented starred functionality for documents and blocks
+- Added query-based filtering (?starred=true, ?trashed=true)
+- Created analytics endpoint (/api/documents/analytics)
+- Updated backend services and routes
+
+**Issues Found:**  
+- API endpoints returning 500 Internal Server Error  
+- Query parameter handling issues ("true" not parsed correctly)  
+- Possible schema mismatch for starred/trashed fields  
+- Route conflict between dynamic routes and /analytics  
+- Database queries failing due to undefined or incorrect filters  
+
+**Fixes Applied:**  
+None  
+
+
+---
+
+### Entry - 3
+
+**Tool:** Codex  
+**Task:** Identify and analyze critical editor and API issues  
+
+### Prompt
+"Act as a senior full-stack engineer working on an existing Notion-like block editor application. The system is facing multiple critical issues in editor behavior, document lifecycle, and API reliability. Analyze problems related to block splitting, merging, deletion, API failures, trash functionality, share count, and document creation. Do not rebuild the project. Identify root causes and explain why these issues are occurring."
+
+### Output Summary
+- Identified issues in block splitting (Enter key) and merging (Backspace)
+- Detected failures in block update API causing editor inconsistency
+- Found problems in trash system (soft delete not working)
+- Identified document creation and share count failures
+- Highlighted synchronization issues between frontend and backend
+
+**Issues Found:**  
+- Backspace not merging blocks correctly or deleting empty blocks  
+- Enter key causing duplication or incorrect splitting  
+- Block update API returning 500 errors  
+- Trash functionality failing (503 error, no soft delete)  
+- Share count not updating  
+- New document creation not persisting  
+- Editor state becoming inconsistent due to API failures  
+
+**Fixes Applied:**  
+None  
+
+
+### Entry - 4
+
+**Tool:** Codex  
+**Task:** Fix editor behavior, API failures, and document lifecycle  
+
+### Prompt
+"Act as a senior full-stack engineer working on an existing Notion-like application. Fix critical issues in editor behavior, backend APIs, and document lifecycle without rebuilding the project. Ensure Enter key splits blocks correctly, Backspace merges or deletes blocks appropriately, and cursor position is maintained. Fix block update API (500 error), document delete API (503 error), and ensure soft delete (trash) works correctly. Implement reliable document creation and share count updates. Ensure frontend and backend are fully synchronized, handle all edge cases, and deliver a stable, production-ready system."
+
+### Output Summary
+- Fixed Enter key behavior for correct block splitting without duplication
+- Implemented proper Backspace handling (merge + delete empty blocks)
+- Restored block update API functionality
+- Fixed document deletion with proper soft delete (trash system)
+- Enabled reliable document creation and persistence
+- Implemented share count updates with backend sync
+- Improved frontend-backend synchronization
+- Stabilized editor state and interactions
+
+**Issues Found:**  
+- Incorrect block splitting and merging logic  
+- API failures (500/503) breaking editor functionality  
+- Trash system not persisting state  
+- Document creation flow broken  
+- Share count not updating  
+- Cursor position inconsistencies  
+- State mismatch between frontend and backend  
+
+**Fixes Applied:**  
+- Rewrote block split and merge logic with proper cursor handling  
+- Fixed block update API and ensured valid request handling  
+- Implemented soft delete with proper DB updates  
+- Fixed document creation API and frontend integration  
+- Added share count increment logic on share action  
+- Synced frontend state with backend responses  
+- Added error handling to prevent editor breakage  
+     
+
+
 
