@@ -13,24 +13,33 @@ import { filterCommands } from "@/lib/slash-commands";
  *   anchorRect  DOMRect | null  — position of the caret
  */
 export default function SlashMenu({ query, onSelect, onClose, anchorRect }) {
-  const [activeIdx, setActiveIdx] = useState(0);
+  const [navigation, setNavigation] = useState({ query, activeIdx: 0 });
   const menuRef = useRef(null);
   const commands = filterCommands(query);
-
-  // Reset active index when query changes
-  useEffect(() => {
-    setActiveIdx(0);
-  }, [query]);
+  const activeIdx = navigation.query === query ? navigation.activeIdx : 0;
 
   // Keyboard navigation
   useEffect(() => {
     function onKeyDown(e) {
       if (e.key === "ArrowDown") {
         e.preventDefault();
-        setActiveIdx((i) => (i + 1) % Math.max(commands.length, 1));
+        setNavigation((current) => ({
+          query,
+          activeIdx:
+            ((current.query === query ? current.activeIdx : 0) + 1) %
+            Math.max(commands.length, 1),
+        }));
       } else if (e.key === "ArrowUp") {
         e.preventDefault();
-        setActiveIdx((i) => (i - 1 + Math.max(commands.length, 1)) % Math.max(commands.length, 1));
+        setNavigation((current) => {
+          const baseIndex = current.query === query ? current.activeIdx : 0;
+          return {
+            query,
+            activeIdx:
+              (baseIndex - 1 + Math.max(commands.length, 1)) %
+              Math.max(commands.length, 1),
+          };
+        });
       } else if (e.key === "Enter") {
         e.preventDefault();
         if (commands[activeIdx]) onSelect(commands[activeIdx].id);
@@ -42,7 +51,7 @@ export default function SlashMenu({ query, onSelect, onClose, anchorRect }) {
 
     window.addEventListener("keydown", onKeyDown, true);
     return () => window.removeEventListener("keydown", onKeyDown, true);
-  }, [commands, activeIdx, onSelect, onClose]);
+  }, [commands, activeIdx, onClose, onSelect, query]);
 
   // Scroll active item into view
   useEffect(() => {

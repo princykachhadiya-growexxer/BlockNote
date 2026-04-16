@@ -1,23 +1,33 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+} from "react";
 
 const THEME_KEY = "bn_theme";
 const ThemeContext = createContext(null);
 
-export function ThemeProvider({ children }) {
-  const [theme, setTheme] = useState("light");
-  const [mounted, setMounted] = useState(false);
+function readTheme() {
+  if (typeof window === "undefined") return "light";
+  const savedTheme = window.localStorage.getItem(THEME_KEY);
+  if (savedTheme === "dark" || savedTheme === "light") {
+    return savedTheme;
+  }
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
 
-  useEffect(() => {
-    const savedTheme = window.localStorage.getItem(THEME_KEY);
-    const preferredTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
-      ? "dark"
-      : "light";
-    const nextTheme = savedTheme === "dark" || savedTheme === "light" ? savedTheme : preferredTheme;
-    setTheme(nextTheme);
-    setMounted(true);
-  }, []);
+export function ThemeProvider({ children }) {
+  const [theme, setTheme] = useState(readTheme);
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
 
   useEffect(() => {
     if (!mounted) return;

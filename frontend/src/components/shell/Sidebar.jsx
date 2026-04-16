@@ -49,13 +49,15 @@ export default function Sidebar({ open, onClose }) {
           setStarredDocs(documents ?? []);
           setLoadingStarred(false);
         }
-      } catch {
-        clearAuthSession();
+      } catch (err) {
+        if (err?.status === 401) {
+          clearAuthSession();
+          router.replace("/login");
+        }
         if (!cancelled) {
           setStarredDocs([]);
           setLoadingStarred(false);
         }
-        router.replace("/login");
       }
     }
 

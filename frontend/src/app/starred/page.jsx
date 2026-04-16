@@ -20,10 +20,13 @@ export default function StarredPages() {
       const documents = await apiFetchDocuments({ starred: true });
       setDocs(documents);
       setLoading(false);
-    } catch {
-      clearAuthSession();
-      router.replace("/login");
-      setError("Could not load starred pages.");
+    } catch (err) {
+      if (err?.status === 401) {
+        clearAuthSession();
+        router.replace("/login");
+      } else {
+        setError("Could not load starred pages.");
+      }
       setLoading(false);
     }
   }, [clearAuthSession, router]);

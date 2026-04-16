@@ -1,11 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import Block from "./Block";
 import SaveStatus from "./SaveStatus";
 import SharePanel from "./SharePanel";
 import {
   fetchBlocks,
+  apiFetchDoc,
   apiToggleBlockStar,
   apiCreateBlock,
   apiUpdateBlock,
@@ -24,10 +26,13 @@ import {
   mergeBlockContent,
   normalizeTextContent,
 } from "@/lib/rich-text";
+import { useAuth } from "@/components/providers/AuthProvider";
 
 const NON_TEXT_TYPES = new Set(["divider", "image"]);
 
 export default function BlockEditor({ docId, initialTitle, shareToken }) {
+  const router = useRouter();
+  const { clearAuthSession } = useAuth();
   const [blocks, setBlocks] = useState([]);
   const [title, setTitle] = useState(initialTitle ?? "Untitled");
   const [loading, setLoading] = useState(true);
@@ -63,28 +68,47 @@ export default function BlockEditor({ docId, initialTitle, shareToken }) {
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
+    if (!docId) {
+      setError("Document not found or access denied.");
+      setLoading(false);
+      return () => {
+        cancelled = true;
+      };
+    }
 
-    fetchBlocks(docId)
-      .then((loaded) => {
+    setLoading(true);
+    setError(null);
+
+    Promise.all([fetchBlocks(docId), apiFetchDoc(docId)])
+      .then(([loadedBlocks, document]) => {
         if (cancelled) return;
-        const next = loaded
+        const next = loadedBlocks
           .map((block) => normalizeLoadedBlock(block))
           .sort((a, b) => a.order_index - b.order_index);
         setBlocks(next);
+        setTitle(document.title || "Untitled");
         setFocusedId(next[0]?.id ?? null);
         setLoading(false);
       })
-      .catch(() => {
+      .catch((err) => {
         if (cancelled) return;
-        setError("Failed to load document.");
+        if (err?.status === 401) {
+          clearAuthSession();
+          router.replace("/login");
+          return;
+        }
+        if (err?.status === 403 || err?.status === 404 || err?.message?.includes("Not found")) {
+          setError("Document not found or access denied.");
+        } else {
+          setError("Failed to load document.");
+        }
         setLoading(false);
       });
 
     return () => {
       cancelled = true;
     };
-  }, [docId]);
+  }, [clearAuthSession, docId, router]);
 
   useEffect(() => {
     if (!focusedId) return;
@@ -96,8 +120,9 @@ export default function BlockEditor({ docId, initialTitle, shareToken }) {
   }, [focusedId, blocks]);
 
   useEffect(() => {
+    const pendingSaveMap = pendingSaves.current;
     return () => {
-      for (const pending of pendingSaves.current.values()) {
+      for (const pending of pendingSaveMap.values()) {
         if (pending.timer) clearTimeout(pending.timer);
         if (pending.controller) pending.controller.abort();
       }
@@ -155,9 +180,14 @@ export default function BlockEditor({ docId, initialTitle, shareToken }) {
     try {
       const result = await apiToggleBlockStar(blockId);
       updateLocalBlock(blockId, (block) => ({ ...block, isStarred: result.isStarred }));
-    } catch {
+    } catch (err) {
       updateLocalBlock(blockId, (block) => ({ ...block, isStarred: current.isStarred }));
-      showToast("Could not update star");
+      if (err?.status === 401) {
+        clearAuthSession();
+        router.replace("/login");
+      } else {
+        showToast("Could not update star");
+      }
     } finally {
       setTogglingStarIds((prev) => prev.filter((id) => id !== blockId));
     }
@@ -211,7 +241,7 @@ export default function BlockEditor({ docId, initialTitle, shareToken }) {
     selection?.addRange(range);
   }
 
-  function scheduleBlockSave(blockId, fields) {
+  const scheduleBlockSave = useCallback((blockId, fields) => {
     const existing = pendingSaves.current.get(blockId);
     if (existing?.timer) clearTimeout(existing.timer);
     if (existing?.controller) existing.controller.abort();
@@ -237,7 +267,7 @@ export default function BlockEditor({ docId, initialTitle, shareToken }) {
 
     pendingSaves.current.set(blockId, { timer });
     refreshBlockSaveStatus();
-  }
+  }, [docId]);
 
   const handleBlockChange = useCallback((blockId, fields) => {
     if (!fields?.content) return;
@@ -251,7 +281,7 @@ export default function BlockEditor({ docId, initialTitle, shareToken }) {
     );
 
     scheduleBlockSave(blockId, { content: fields.content });
-  }, []);
+  }, [scheduleBlockSave]);
 
   function handleTitleChange(e) {
     const nextTitle = e.target.value;

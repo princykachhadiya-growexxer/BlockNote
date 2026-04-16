@@ -8,37 +8,67 @@ datasource db {
 }
 
 model User {
-  id            String     @id @default(uuid())
-  email         String     @unique
+  id            String         @id @default(uuid())
+  email         String         @unique
   password_hash String
-  created_at    DateTime   @default(now())
+  created_at    DateTime       @default(now())
   documents     Document[]
+  documentStars DocumentStar[]
+  blockStars    BlockStar[]
 }
 
 model Document {
-  id          String   @id @default(uuid())
+  id          String         @id @default(uuid())
   user_id     String
-  user        User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  title       String   @default("Untitled")
-  share_token String?  @unique
-  is_public   Boolean  @default(false)
-  updated_at  DateTime @updatedAt
+  user        User           @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  title       String         @default("Untitled")
+  share_token String?        @unique
+  is_public   Boolean        @default(false)
+  updated_at  DateTime       @updatedAt
   blocks      Block[]
+  stars       DocumentStar[]
 
   @@index([user_id])
 }
 
 model Block {
-  id          String    @id @default(uuid())
+  id          String      @id @default(uuid())
   document_id String
-  document    Document  @relation(fields: [document_id], references: [id], onDelete: Cascade)
+  document    Document    @relation(fields: [document_id], references: [id], onDelete: Cascade)
   type        String
-  content     Json      @default("{}")
-  order_index Float     @default(0)
+  content     Json        @default("{}")
+  order_index Float       @default(0)
   parent_id   String?
-  parent      Block?    @relation("BlockHierarchy", fields: [parent_id], references: [id], onDelete: SetNull)
-  children    Block[]   @relation("BlockHierarchy")
-  created_at  DateTime  @default(now())
+  parent      Block?      @relation("BlockHierarchy", fields: [parent_id], references: [id], onDelete: SetNull)
+  children    Block[]     @relation("BlockHierarchy")
+  created_at  DateTime    @default(now())
+  stars       BlockStar[]
 
   @@index([document_id])
+}
+
+model DocumentStar {
+  id          String   @id @default(uuid())
+  user_id     String
+  document_id String
+  user        User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  document    Document @relation(fields: [document_id], references: [id], onDelete: Cascade)
+  created_at  DateTime @default(now())
+
+  @@unique([user_id, document_id])
+  @@index([user_id])
+  @@index([document_id])
+}
+
+model BlockStar {
+  id         String   @id @default(uuid())
+  user_id    String
+  block_id   String
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  block      Block    @relation(fields: [block_id], references: [id], onDelete: Cascade)
+  created_at DateTime @default(now())
+
+  @@unique([user_id, block_id])
+  @@index([user_id])
+  @@index([block_id])
 }

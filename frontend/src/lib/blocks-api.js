@@ -2,11 +2,18 @@ import { authFetch } from "./browser-auth";
 
 const BASE = "/api";
 
+async function createApiError(res, fallbackMessage) {
+  const data = await res.json().catch(() => ({}));
+  const error = new Error(data.message ?? fallbackMessage);
+  error.status = res.status;
+  return error;
+}
+
 // ─── Block API ────────────────────────────────────────────────────────────────
 
 export async function fetchBlocks(docId) {
   const res = await authFetch(`${BASE}/documents/${docId}/blocks`);
-  if (!res.ok) throw new Error("Failed to fetch blocks");
+  if (!res.ok) throw await createApiError(res, "Failed to fetch blocks");
   const data = await res.json();
   return data.blocks;
 }
@@ -16,7 +23,7 @@ export async function fetchUserBlocks({ starred = false } = {}) {
   if (starred) params.set("starred", "true");
   const suffix = params.toString() ? `?${params.toString()}` : "";
   const res = await authFetch(`${BASE}/blocks${suffix}`);
-  if (!res.ok) throw new Error("Failed to fetch blocks");
+  if (!res.ok) throw await createApiError(res, "Failed to fetch blocks");
   const data = await res.json();
   return data.blocks;
 }
@@ -27,10 +34,7 @@ export async function apiCreateBlock(docId, { type, content, order_index, parent
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ type, content, order_index, parent_id }),
   });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.message ?? "Failed to create block");
-  }
+  if (!res.ok) throw await createApiError(res, "Failed to create block");
   return (await res.json()).block;
 }
 
@@ -41,10 +45,7 @@ export async function apiUpdateBlock(docId, blockId, fields, signal) {
     body: JSON.stringify(fields),
     signal,
   });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.message ?? "Failed to update block");
-  }
+  if (!res.ok) throw await createApiError(res, "Failed to update block");
   return (await res.json()).block;
 }
 
@@ -52,17 +53,14 @@ export async function apiDeleteBlock(docId, blockId) {
   const res = await authFetch(`${BASE}/documents/${docId}/blocks/${blockId}`, {
     method: "DELETE",
   });
-  if (!res.ok) throw new Error("Failed to delete block");
+  if (!res.ok) throw await createApiError(res, "Failed to delete block");
 }
 
 export async function apiToggleBlockStar(blockId) {
   const res = await authFetch(`${BASE}/blocks/${blockId}/star`, {
     method: "PATCH",
   });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.message ?? "Failed to toggle block star");
-  }
+  if (!res.ok) throw await createApiError(res, "Failed to toggle block star");
   return res.json();
 }
 
@@ -72,10 +70,7 @@ export async function apiSplitBlock(docId, blockId, { leftContent, rightContent,
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ leftContent, rightContent, rightOrderIndex }),
   });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.message ?? "Failed to split block");
-  }
+  if (!res.ok) throw await createApiError(res, "Failed to split block");
   return res.json(); // { left, right }
 }
 
@@ -85,7 +80,7 @@ export async function apiReorderBlocks(docId, blocks) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ blocks }),
   });
-  if (!res.ok) throw new Error("Failed to reorder blocks");
+  if (!res.ok) throw await createApiError(res, "Failed to reorder blocks");
   return res.json();
 }
 
@@ -98,13 +93,13 @@ export async function apiUpdateDocTitle(docId, title, signal) {
     body: JSON.stringify({ title }),
     signal,
   });
-  if (!res.ok) throw new Error("Failed to update title");
+  if (!res.ok) throw await createApiError(res, "Failed to update title");
   return (await res.json()).document;
 }
 
 export async function apiFetchDoc(docId) {
   const res = await authFetch(`${BASE}/documents/${docId}`);
-  if (!res.ok) throw new Error("Failed to fetch document");
+  if (!res.ok) throw await createApiError(res, "Failed to fetch document");
   return (await res.json()).document;
 }
 
@@ -113,7 +108,7 @@ export async function apiFetchDocuments({ starred = false } = {}) {
   if (starred) params.set("starred", "true");
   const suffix = params.toString() ? `?${params.toString()}` : "";
   const res = await authFetch(`${BASE}/documents${suffix}`);
-  if (!res.ok) throw new Error("Failed to fetch documents");
+  if (!res.ok) throw await createApiError(res, "Failed to fetch documents");
   return (await res.json()).documents;
 }
 
@@ -121,10 +116,7 @@ export async function apiToggleDocumentStar(docId) {
   const res = await authFetch(`${BASE}/documents/${docId}/star`, {
     method: "PATCH",
   });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.message ?? "Failed to toggle document star");
-  }
+  if (!res.ok) throw await createApiError(res, "Failed to toggle document star");
   return res.json();
 }
 
@@ -136,7 +128,7 @@ export async function apiEnableShare(docId) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ action: "enable" }),
   });
-  if (!res.ok) throw new Error("Failed to enable sharing");
+  if (!res.ok) throw await createApiError(res, "Failed to enable sharing");
   return res.json(); // { shareToken, isPublic }
 }
 
@@ -146,7 +138,7 @@ export async function apiRevokeShare(docId) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ action: "revoke" }),
   });
-  if (!res.ok) throw new Error("Failed to revoke sharing");
+  if (!res.ok) throw await createApiError(res, "Failed to revoke sharing");
   return res.json();
 }
 

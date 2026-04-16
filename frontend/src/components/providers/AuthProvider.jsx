@@ -2,61 +2,70 @@
 
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import {
-  clearSession,
   getAccessToken,
-  getStoredUser,
-  setSession,
+  setAccessToken,
+  clearAccessToken,
 } from "@/lib/browser-auth";
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
+  // user is null (logged-out) or an object (logged-in)
   const [user, setUser] = useState(null);
+  // initialized becomes true once we've settled on an auth state
   const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
-    let cancelled = false;
-
     async function bootstrap() {
-      const token = getAccessToken();
-      const storedUser = getStoredUser();
-
-      if (token && storedUser) {
-        if (!cancelled) {
-          setUser(storedUser);
-          setInitialized(true);
-        }
-        return;
-      }
-
       try {
-        const res = await fetch("/api/auth/refresh", {
-          method: "POST",
-          credentials: "include",
-        });
+        const token = getAccessToken();
+        let sessionRestored = false;
 
-        if (!res.ok) {
-          clearSession();
-          if (!cancelled) setInitialized(true);
-          return;
+        if (token) {
+          try {
+            const res = await fetch("/api/auth/me", {
+              headers: { Authorization: `Bearer ${token}` },
+              credentials: "include",
+            });
+
+            if (res.ok) {
+              const data = await res.json();
+              setUser(data.user ?? null);
+              sessionRestored = true;
+            } else {
+              clearAccessToken();
+            }
+          } catch {
+            clearAccessToken();
+          }
         }
 
-        const data = await res.json();
-        setSession(data);
-        if (!cancelled) {
-          setUser(data.user ?? null);
-          setInitialized(true);
+        if (!sessionRestored) {
+          try {
+            const res = await fetch("/api/auth/refresh", {
+              method: "POST",
+              credentials: "include",
+            });
+
+            if (res.ok) {
+              const data = await res.json();
+              setAccessToken(data.accessToken);
+              setUser(data.user ?? null);
+            } else {
+              clearAccessToken();
+              setUser(null);
+            }
+          } catch {
+            clearAccessToken();
+            setUser(null);
+          }
         }
-      } catch {
-        clearSession();
-        if (!cancelled) setInitialized(true);
+      } finally {
+        setInitialized(true);
       }
     }
 
     bootstrap();
-    return () => {
-      cancelled = true;
-    };
   }, []);
 
   const value = useMemo(
@@ -64,16 +73,20 @@ export function AuthProvider({ children }) {
       user,
       initialized,
       isAuthenticated: Boolean(user),
+
+      /** Call after a successful login or register API response. */
       setAuthSession(session) {
-        setSession(session);
+        setAccessToken(session.accessToken);
         setUser(session.user ?? null);
       },
+
+      /** Call on logout — clears state AND the access token. */
       clearAuthSession() {
-        clearSession();
+        clearAccessToken();
         setUser(null);
       },
     }),
-    [initialized, user]
+    [initialized, user],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

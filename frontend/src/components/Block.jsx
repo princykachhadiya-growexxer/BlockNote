@@ -98,7 +98,14 @@ export default function Block({
   }
 
   if (block.type === "image") {
-    return <ImageBlock block={block} onFocus={onFocus} onChange={onChange} />;
+    return (
+      <ImageBlock
+        key={`${block.id}:${block.content?.url ?? ""}`}
+        block={block}
+        onFocus={onFocus}
+        onChange={onChange}
+      />
+    );
   }
 
   function getCaretRect() {
@@ -410,12 +417,6 @@ function ImageBlock({ block, onFocus, onChange }) {
   const [editing, setEditing] = useState(!block.content?.url);
   const [urlInput, setUrlInput] = useState(block.content?.url ?? "");
   const [imageFailed, setImageFailed] = useState(false);
-
-  useEffect(() => {
-    setUrlInput(block.content?.url ?? "");
-    setEditing(!block.content?.url);
-    setImageFailed(false);
-  }, [block.content?.url]);
 
   function commit() {
     const url = urlInput.trim();

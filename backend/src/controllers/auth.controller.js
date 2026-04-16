@@ -3,6 +3,7 @@ import {
   registerUser,
   generateTokens,
   refreshUser,
+  getUserById,
 } from "../services/auth.service.js";
 
 import {
@@ -55,4 +56,13 @@ export const refresh = async (req, res) => {
 export const logout = (req, res) => {
   clearRefreshCookie(res);
   res.json({ ok: true });
+};
+
+export const me = async (req, res) => {
+  try {
+    const user = await getUserById(req.userId);
+    res.json({ user });
+  } catch {
+    res.status(401).json({ message: "Unauthorized" });
+  }
 };

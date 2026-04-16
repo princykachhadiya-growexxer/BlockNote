@@ -5,6 +5,15 @@ import { signAccess, signRefresh, verifyRefresh } from "../lib/auth-tokens.js";
 import { ApiError } from "../utils/ApiError.js";
 import { HTTP } from "../utils/httpStatus.js";
 
+function toSafeUser(user) {
+  if (!user) return null;
+  return {
+    id: user.id,
+    email: user.email,
+    created_at: user.created_at,
+  };
+}
+
 export const loginUser = async (email, password) => {
   const user = await prisma.user.findUnique({
     where: { email: email.toLowerCase() },
@@ -14,7 +23,7 @@ export const loginUser = async (email, password) => {
     throw new ApiError(HTTP.UNAUTHORIZED, "Invalid credentials");
   }
 
-  return user;
+  return toSafeUser(user);
 };
 
 export const registerUser = async (email, password) => {
@@ -33,9 +42,11 @@ export const registerUser = async (email, password) => {
 
   const password_hash = await hashPassword(password);
 
-  return prisma.user.create({
+  const user = await prisma.user.create({
     data: { email: email.toLowerCase(), password_hash },
   });
+
+  return toSafeUser(user);
 };
 
 export const generateTokens = (userId) => {
@@ -58,5 +69,18 @@ export const refreshUser = async (token) => {
     throw new ApiError(HTTP.NOT_FOUND, "User not found");
   }
 
-  return user;
+  return toSafeUser(user);
+};
+
+export const getUserById = async (id) => {
+  if (!id) {
+    throw new ApiError(HTTP.UNAUTHORIZED, "Unauthorized");
+  }
+
+  const user = await prisma.user.findUnique({ where: { id } });
+  if (!user) {
+    throw new ApiError(HTTP.NOT_FOUND, "User not found");
+  }
+
+  return toSafeUser(user);
 };
