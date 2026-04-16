@@ -13,7 +13,7 @@
   --border: rgba(26, 26, 26, 0.08);
   --sidebar: #2d2d2d;
   --muted: #5f6986;
-  --app-bg: #f4f6fb;
+  --app-bg: linear-gradient(180deg, #abb0db 0%, #d9e4f8 100%);
   --edge: rgba(26, 26, 26, 0.08);
 }
 
@@ -30,7 +30,7 @@
   --border: rgba(255, 255, 255, 0.08);
   --sidebar: #0f1116;
   --muted: #9ca6bf;
-  --app-bg: #101218;
+  --app-bg: linear-gradient(180deg, #111317 0%, #101218 100%);
   --edge: rgba(255, 255, 255, 0.08);
 }
 
@@ -55,6 +55,7 @@ body {
 
 body {
   background: var(--app-bg);
+  background-attachment: fixed;
   color: var(--foreground);
   font-family: var(--font-inter), Arial, Helvetica, sans-serif;
   transition:

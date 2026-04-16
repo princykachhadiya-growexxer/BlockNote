@@ -24,11 +24,14 @@ model Document {
   title       String         @default("Untitled")
   share_token String?        @unique
   is_public   Boolean        @default(false)
+  share_count Int            @default(0)
+  deleted_at  DateTime?
   updated_at  DateTime       @updatedAt
   blocks      Block[]
   stars       DocumentStar[]
 
   @@index([user_id])
+  @@index([user_id, deleted_at])
 }
 
 model Block {

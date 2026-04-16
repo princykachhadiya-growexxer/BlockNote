@@ -15,6 +15,7 @@ import {
 } from "../validations/block.validation.js";
 import { ApiError } from "../utils/ApiError.js";
 import { HTTP } from "../utils/httpStatus.js";
+import { parseBooleanQuery } from "../utils/query.js";
 
 // GET /api/documents/:docId/blocks
 export const listBlocks = async (req, res, next) => {
@@ -29,8 +30,9 @@ export const listBlocks = async (req, res, next) => {
 // GET /api/blocks?starred=true
 export const listUserBlocks = async (req, res, next) => {
   try {
+    const starredOnly = parseBooleanQuery(req.query.starred, "starred");
     const blocks = await getUserBlocks(req.userId, {
-      starredOnly: req.query.starred === "true",
+      starredOnly,
     });
     res.json({ blocks });
   } catch (err) {

@@ -1,4 +1,5 @@
 import { prisma } from "../lib/prisma.js";
+import { getDocumentSchemaSupport } from "../lib/document-schema.js";
 import { ApiError } from "../utils/ApiError.js";
 import { HTTP } from "../utils/httpStatus.js";
 import { normalizeBlockContent } from "../utils/richText.js";
@@ -15,8 +16,13 @@ async function assertDocumentOwner(documentId, userId) {
     throw new ApiError(HTTP.BAD_REQUEST, "Missing documentId or userId");
   }
 
+  const schemaSupport = await getDocumentSchemaSupport();
   const doc = await prisma.document.findFirst({
-    where: { id: documentId, user_id: userId },
+    where: {
+      id: documentId,
+      user_id: userId,
+      ...(schemaSupport.deletedAt ? { deleted_at: null } : {}),
+    },
     select: { id: true },
   });
   if (!doc) {
@@ -291,9 +297,13 @@ export async function splitBlock(blockId, documentId, userId, { leftContent, rig
 }
 
 export async function getUserBlocks(userId, { starredOnly = false } = {}) {
+  const schemaSupport = await getDocumentSchemaSupport();
   const blocks = await prisma.block.findMany({
     where: {
-      document: { user_id: userId },
+      document: {
+        user_id: userId,
+        ...(schemaSupport.deletedAt ? { deleted_at: null } : {}),
+      },
       ...(starredOnly
         ? {
             stars: {
@@ -328,11 +338,13 @@ export async function getUserBlocks(userId, { starredOnly = false } = {}) {
 }
 
 export async function toggleBlockStar(blockId, userId) {
+  const schemaSupport = await getDocumentSchemaSupport();
   const block = await prisma.block.findFirst({
     where: {
       id: blockId,
       document: {
         user_id: userId,
+        ...(schemaSupport.deletedAt ? { deleted_at: null } : {}),
       },
     },
     select: {

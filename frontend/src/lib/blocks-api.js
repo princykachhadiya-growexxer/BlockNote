@@ -103,13 +103,20 @@ export async function apiFetchDoc(docId) {
   return (await res.json()).document;
 }
 
-export async function apiFetchDocuments({ starred = false } = {}) {
+export async function apiFetchDocuments({ starred = false, trashed = false } = {}) {
   const params = new URLSearchParams();
   if (starred) params.set("starred", "true");
+  if (trashed) params.set("trashed", "true");
   const suffix = params.toString() ? `?${params.toString()}` : "";
   const res = await authFetch(`${BASE}/documents${suffix}`);
   if (!res.ok) throw await createApiError(res, "Failed to fetch documents");
   return (await res.json()).documents;
+}
+
+export async function apiFetchDashboardAnalytics() {
+  const res = await authFetch(`${BASE}/documents/analytics`);
+  if (!res.ok) throw await createApiError(res, "Failed to fetch dashboard analytics");
+  return res.json();
 }
 
 export async function apiToggleDocumentStar(docId) {
@@ -118,6 +125,28 @@ export async function apiToggleDocumentStar(docId) {
   });
   if (!res.ok) throw await createApiError(res, "Failed to toggle document star");
   return res.json();
+}
+
+export async function apiDeleteDocument(docId) {
+  const res = await authFetch(`${BASE}/documents/${docId}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) throw await createApiError(res, "Failed to delete document");
+}
+
+export async function apiRestoreDocument(docId) {
+  const res = await authFetch(`${BASE}/documents/${docId}/restore`, {
+    method: "POST",
+  });
+  if (!res.ok) throw await createApiError(res, "Failed to restore document");
+  return (await res.json()).document;
+}
+
+export async function apiPermanentlyDeleteDocument(docId) {
+  const res = await authFetch(`${BASE}/documents/${docId}/permanent`, {
+    method: "DELETE",
+  });
+  if (!res.ok) throw await createApiError(res, "Failed to permanently delete document");
 }
 
 // ─── Share API ────────────────────────────────────────────────────────────────

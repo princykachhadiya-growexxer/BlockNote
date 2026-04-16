@@ -7,7 +7,7 @@ import NavItem from "./NavItem";
 import { useTheme } from "../providers/ThemeProvider";
 import { logoutUser } from "@/lib/browser-auth";
 import { useAuth } from "../providers/AuthProvider";
-import { apiFetchDocuments } from "@/lib/blocks-api";
+import { apiFetchDocuments, fetchUserBlocks } from "@/lib/blocks-api";
 
 const NAV_ITEMS = [
   {
@@ -21,14 +21,28 @@ const NAV_ITEMS = [
   },
   {
     href: "/starred",
-    label: "Starred Pages",
+    label: "Starred",
     icon: (
       <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
         <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 0 0 .95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 0 0-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.539 1.118l-2.8-2.034a1 1 0 0 0-1.176 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 0 0-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81H7.03a1 1 0 0 0 .95-.69l1.07-3.292Z" />
       </svg>
     ),
   },
+  {
+    href: "/trash",
+    label: "Trash",
+    icon: (
+      <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+        <path d="M7.75 3a.75.75 0 0 0-.75.75V4H4.75a.75.75 0 0 0 0 1.5h.46l.7 9.11A2 2 0 0 0 7.9 16.5h4.2a2 2 0 0 0 1.99-1.89l.7-9.11h.46a.75.75 0 0 0 0-1.5H13v-.25A.75.75 0 0 0 12.25 3h-4.5Zm3.75 1H8.5v.25h3V4Zm-2 3.25a.75.75 0 0 1 .75.75v4a.75.75 0 0 1-1.5 0V8a.75.75 0 0 1 .75-.75Zm3 0a.75.75 0 0 1 .75.75v4a.75.75 0 0 1-1.5 0V8a.75.75 0 0 1 .75-.75Zm-6 0a.75.75 0 0 1 .75.75v4a.75.75 0 0 1-1.5 0V8a.75.75 0 0 1 .75-.75Z" />
+      </svg>
+    ),
+  },
 ];
+
+function getBlockLabel(block) {
+  const text = block.content?.text?.trim() || block.content?.url?.trim() || `${block.type} block`;
+  return text.length > 36 ? `${text.slice(0, 36)}…` : text;
+}
 
 export default function Sidebar({ open, onClose }) {
   const pathname = usePathname();
@@ -36,19 +50,27 @@ export default function Sidebar({ open, onClose }) {
   const { mounted, theme, toggleTheme } = useTheme();
   const { clearAuthSession } = useAuth();
   const [starredDocs, setStarredDocs] = useState([]);
+  const [starredBlocks, setStarredBlocks] = useState([]);
+  const [trashCount, setTrashCount] = useState(0);
   const [loadingStarred, setLoadingStarred] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
 
-    async function loadStarred() {
+    async function loadSidebarData() {
       setLoadingStarred(true);
       try {
-        const documents = await apiFetchDocuments({ starred: true });
-        if (!cancelled) {
-          setStarredDocs(documents ?? []);
-          setLoadingStarred(false);
-        }
+        const [documents, blocks, trashedDocs] = await Promise.all([
+          apiFetchDocuments({ starred: true }),
+          fetchUserBlocks({ starred: true }),
+          apiFetchDocuments({ trashed: true }),
+        ]);
+
+        if (cancelled) return;
+        setStarredDocs(documents ?? []);
+        setStarredBlocks(blocks ?? []);
+        setTrashCount(trashedDocs?.length ?? 0);
+        setLoadingStarred(false);
       } catch (err) {
         if (err?.status === 401) {
           clearAuthSession();
@@ -56,12 +78,14 @@ export default function Sidebar({ open, onClose }) {
         }
         if (!cancelled) {
           setStarredDocs([]);
+          setStarredBlocks([]);
+          setTrashCount(0);
           setLoadingStarred(false);
         }
       }
     }
 
-    loadStarred();
+    void loadSidebarData();
     return () => {
       cancelled = true;
     };
@@ -74,6 +98,21 @@ export default function Sidebar({ open, onClose }) {
     router.replace("/login");
     router.refresh();
   }
+
+  const starredPreview = [
+    ...starredDocs.slice(0, 3).map((doc) => ({
+      id: `doc-${doc.id}`,
+      href: `/documents/${doc.id}`,
+      label: doc.title,
+      meta: "Document",
+    })),
+    ...starredBlocks.slice(0, 2).map((block) => ({
+      id: `block-${block.id}`,
+      href: `/documents/${block.document_id}#block-${block.id}`,
+      label: getBlockLabel(block),
+      meta: block.document?.title || "Block",
+    })),
+  ].slice(0, 5);
 
   return (
     <>
@@ -107,7 +146,7 @@ export default function Sidebar({ open, onClose }) {
             aria-label="Close navigation"
           >
             <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M5.22 5.22a.75.75 0 0 1 1.06 0L10 8.94l3.72-3.72a.75.75 0 1 1 1.06 1.06L11.06 10l3.72 3.72a.75.75 0 1 1-1.06 1.06L10 11.06l-3.72 3.72a.75.75 0 1 1-1.06-1.06L8.94 10 5.22 6.28a.75.75 0 0 1 0-1.06Z" />
+              <path d="M5.22 5.22a.75.75 0 0 1 1.06 0L10 8.94l3.72-3.72a.75.75 0 1 1 1.06 1.06L11.06 10l3.72 3.72a.75.75 0 1 1-1.06 1.06L10 11.06l-3.72 3.72a.75.75 0 0 1-1.06-1.06L8.94 10 5.22 6.28a.75.75 0 0 1 0-1.06Z" />
             </svg>
           </button>
         </div>
@@ -117,7 +156,11 @@ export default function Sidebar({ open, onClose }) {
             <NavItem
               key={item.href}
               href={item.href}
-              label={item.label}
+              label={
+                item.href === "/trash" && trashCount > 0
+                  ? `${item.label} (${trashCount})`
+                  : item.label
+              }
               icon={item.icon}
               active={pathname === item.href}
               onNavigate={onClose}
@@ -128,23 +171,28 @@ export default function Sidebar({ open, onClose }) {
         <section className="mt-8 px-2">
           <div className="mb-3 flex items-center justify-between">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/35">Starred</p>
-            <span className="text-xs text-white/35">{starredDocs.length}</span>
+            <span className="text-xs text-white/35">
+              {starredDocs.length + starredBlocks.length}
+            </span>
           </div>
 
           <div className="space-y-1">
             {loadingStarred ? (
               <p className="rounded-2xl px-3 py-2 text-sm text-white/45">Loading…</p>
-            ) : starredDocs.length === 0 ? (
+            ) : starredPreview.length === 0 ? (
               <p className="rounded-2xl px-3 py-2 text-sm text-white/45">No starred items</p>
             ) : (
-              starredDocs.map((doc) => (
+              starredPreview.map((item) => (
                 <Link
-                  key={doc.id}
-                  href={`/documents/${doc.id}`}
+                  key={item.id}
+                  href={item.href}
                   onClick={onClose}
-                  className="block truncate rounded-2xl px-3 py-2 text-sm text-white/72 transition hover:bg-white/8 hover:text-white"
+                  className="block rounded-2xl px-3 py-2 transition hover:bg-white/8"
                 >
-                  {doc.title}
+                  <p className="truncate text-sm text-white/78">{item.label}</p>
+                  <p className="mt-0.5 truncate text-[11px] uppercase tracking-[0.18em] text-white/35">
+                    {item.meta}
+                  </p>
                 </Link>
               ))
             )}

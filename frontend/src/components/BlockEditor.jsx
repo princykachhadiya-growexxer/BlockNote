@@ -259,6 +259,15 @@ export default function BlockEditor({ docId, initialTitle, shareToken }) {
     selection?.addRange(range);
   }
 
+  function findPreviousTextBlock(blocksList, startIndex) {
+    for (let idx = startIndex - 1; idx >= 0; idx -= 1) {
+      if (!NON_TEXT_TYPES.has(blocksList[idx].type)) {
+        return blocksList[idx];
+      }
+    }
+    return null;
+  }
+
   const scheduleBlockSave = useCallback((blockId, fields) => {
     const existing = pendingSaves.current.get(blockId);
     if (existing?.timer) clearTimeout(existing.timer);
@@ -390,11 +399,6 @@ export default function BlockEditor({ docId, initialTitle, shareToken }) {
       return;
     }
 
-    if (splitPayload.atEnd) {
-      await insertBlockBelow(blockId);
-      return;
-    }
-
     cancelPendingSave(blockId);
 
     try {
@@ -443,36 +447,37 @@ export default function BlockEditor({ docId, initialTitle, shareToken }) {
     if (!block) return;
 
     if (index === 0) {
-      showToast("You are on the first block");
-      return;
-    }
-
-    const previous = currentBlocks[index - 1];
-    if (NON_TEXT_TYPES.has(previous.type)) {
-      showToast("Cannot merge with this block type");
       return;
     }
 
     if (isBlockEmpty(block.content)) {
+      const previousTextBlock = findPreviousTextBlock(currentBlocks, index);
       cancelPendingSave(blockId);
       try {
         await apiDeleteBlock(docId, blockId);
         setBlocks((prev) => prev.filter((item) => item.id !== blockId));
-        setFocusedId(previous.id);
-        requestAnimationFrame(() => focusBlockEnd(previous.id));
+        if (previousTextBlock) {
+          setFocusedId(previousTextBlock.id);
+          requestAnimationFrame(() => focusBlockEnd(previousTextBlock.id));
+        }
       } catch (err) {
         console.error("[delete empty block]", err);
       }
       return;
     }
 
-    cancelPendingSave(blockId);
-    cancelPendingSave(previous.id);
+    const previousTextBlock = findPreviousTextBlock(currentBlocks, index);
+    if (!previousTextBlock) {
+      return;
+    }
 
-    const mergedContent = mergeBlockContent(previous.content, block.content);
+    cancelPendingSave(blockId);
+    cancelPendingSave(previousTextBlock.id);
+
+    const mergedContent = mergeBlockContent(previousTextBlock.content, block.content);
 
     try {
-      const merged = await apiUpdateBlock(docId, previous.id, {
+      const merged = await apiUpdateBlock(docId, previousTextBlock.id, {
         content: mergedContent,
       });
       await apiDeleteBlock(docId, blockId);
@@ -480,10 +485,12 @@ export default function BlockEditor({ docId, initialTitle, shareToken }) {
       setBlocks((prev) =>
         prev
           .filter((item) => item.id !== blockId)
-          .map((item) => (item.id === previous.id ? normalizeLoadedBlock(merged) : item))
+          .map((item) =>
+            item.id === previousTextBlock.id ? normalizeLoadedBlock(merged) : item
+          )
       );
-      setFocusedId(previous.id);
-      requestAnimationFrame(() => focusBlockEnd(previous.id));
+      setFocusedId(previousTextBlock.id);
+      requestAnimationFrame(() => focusBlockEnd(previousTextBlock.id));
     } catch (err) {
       console.error("[merge block]", err);
     }

@@ -10,7 +10,10 @@ router.use(requireAuth);
 router.use("/:docId/blocks", blockRoutes);
 
 router.get("/", controller.getAllDocs);
+router.get("/analytics", controller.getAnalytics);
 router.patch("/:id/star", controller.toggleStar);
+router.post("/:id/restore", controller.restoreDoc);
+router.delete("/:id/permanent", controller.permanentlyDeleteDoc);
 router.post("/:docId/share", manageShare);
 router.get("/:id", controller.getDoc);
 router.post("/", controller.createDoc);
