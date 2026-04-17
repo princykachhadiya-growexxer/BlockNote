@@ -54,6 +54,21 @@ export default function BlockEditor({ docId, initialTitle, shareToken }) {
     [blocks],
   );
 
+  const documentCounts = useMemo(() => {
+    const textSegments = sortedBlocks
+      .filter((block) => !NON_TEXT_TYPES.has(block.type))
+      .map((block) => String(block.content?.text ?? "").replace(/\s+/g, " ").trim())
+      .filter(Boolean);
+
+    const normalizedText = textSegments.join(" ").trim();
+
+    return {
+      words: normalizedText ? normalizedText.split(" ").filter(Boolean).length : 0,
+      characters: normalizedText.replace(/\s/g, "").length,
+      images: sortedBlocks.filter((block) => block.type === "image").length,
+    };
+  }, [sortedBlocks]);
+
   const editorStatus = useMemo(() => {
     const states = [titleStatus, blockSaveStatus];
     if (states.includes("error")) return "error";
@@ -824,6 +839,15 @@ export default function BlockEditor({ docId, initialTitle, shareToken }) {
           placeholder="Untitled"
           className="mb-10 w-full rounded-[1.75rem] border border-[var(--edge)] bg-[color:color-mix(in_srgb,var(--surface)_72%,transparent)] px-5 py-4 text-4xl font-semibold tracking-[-0.03em] text-[var(--foreground)] shadow-[0_18px_45px_rgba(20,28,45,0.08)] outline-none placeholder:text-[var(--muted)] focus:border-[var(--accent)] focus:bg-[var(--surface)] focus:shadow-[0_0_0_4px_color-mix(in_srgb,var(--accent)_22%,transparent),0_18px_45px_rgba(20,28,45,0.08)] md:text-5xl"
         />
+
+        <div className="-mt-6 mb-8 text-sm text-[var(--muted)]">
+          {documentCounts.words} {documentCounts.words === 1 ? "word" : "words"}
+          {" • "}
+          {documentCounts.characters}{" "}
+          {documentCounts.characters === 1 ? "character" : "characters"}
+          {" • "}
+          {documentCounts.images} {documentCounts.images === 1 ? "image" : "images"}
+        </div>
 
         <div className="space-y-1">
           {sortedBlocks.map((block, index) => (
