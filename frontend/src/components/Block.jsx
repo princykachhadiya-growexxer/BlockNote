@@ -11,6 +11,9 @@ import {
 
 const NON_EDITABLE_TYPES = new Set(["divider", "image"]);
 const INLINE_FORMATTING_TYPES = new Set(["paragraph", "heading_1", "heading_2", "todo"]);
+const MIN_IMAGE_WIDTH = 100;
+const MIN_IMAGE_HEIGHT = 100;
+const MAX_IMAGE_WIDTH = 800;
 
 export default function Block({
   block,
@@ -438,13 +441,135 @@ function ImageBlock({ block, onFocus, onChange }) {
   const [editing, setEditing] = useState(!block.content?.url);
   const [urlInput, setUrlInput] = useState(block.content?.url ?? "");
   const [imageFailed, setImageFailed] = useState(false);
+  const [naturalSize, setNaturalSize] = useState(null);
+  const [draftSize, setDraftSize] = useState(null);
+  const [maxWidth, setMaxWidth] = useState(MAX_IMAGE_WIDTH);
+  const frameRef = useRef(null);
+  const resizeStateRef = useRef(null);
+  const latestDraftSizeRef = useRef(null);
+
+  useEffect(() => {
+    const el = frameRef.current;
+    if (!el?.parentElement || typeof ResizeObserver === "undefined") return undefined;
+
+    const updateMaxWidth = () => {
+      const containerWidth = el.parentElement?.clientWidth ?? MAX_IMAGE_WIDTH;
+      setMaxWidth(Math.max(MIN_IMAGE_WIDTH, Math.min(MAX_IMAGE_WIDTH, containerWidth)));
+    };
+
+    updateMaxWidth();
+    const observer = new ResizeObserver(updateMaxWidth);
+    observer.observe(el.parentElement);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    latestDraftSizeRef.current = draftSize;
+  }, [draftSize]);
+
+  useEffect(() => () => {
+    resizeStateRef.current = null;
+  }, []);
 
   function commit() {
     const url = urlInput.trim();
     if (url) {
-      onChange(block.id, { content: { ...block.content, url } });
+      onChange(block.id, {
+        content: {
+          ...block.content,
+          url,
+          width: block.content?.width,
+          height: block.content?.height,
+        },
+      });
       setEditing(false);
     }
+  }
+
+  function getAspectRatio() {
+    const width = naturalSize?.width ?? block.content?.width ?? 1;
+    const height = naturalSize?.height ?? block.content?.height ?? 1;
+    return height / width;
+  }
+
+  function clampSize(width, aspectRatio) {
+    const safeAspectRatio = aspectRatio > 0 ? aspectRatio : 1;
+    const minWidthFromHeight = MIN_IMAGE_HEIGHT / safeAspectRatio;
+    const boundedWidth = Math.min(
+      Math.max(width, Math.max(MIN_IMAGE_WIDTH, minWidthFromHeight)),
+      maxWidth
+    );
+
+    return {
+      width: Math.round(boundedWidth),
+      height: Math.round(boundedWidth * safeAspectRatio),
+    };
+  }
+
+  function getDisplaySize() {
+    const aspectRatio = getAspectRatio();
+    const persistedWidth = Number(block.content?.width);
+    const persistedHeight = Number(block.content?.height);
+
+    if (draftSize) {
+      return clampSize(draftSize.width, aspectRatio);
+    }
+
+    if (Number.isFinite(persistedWidth) && persistedWidth > 0) {
+      const widthFromHeight = Number.isFinite(persistedHeight) && persistedHeight > 0
+        ? persistedHeight / aspectRatio
+        : persistedWidth;
+      return clampSize(widthFromHeight, aspectRatio);
+    }
+
+    const naturalWidth = naturalSize?.width ?? maxWidth;
+    return clampSize(Math.min(naturalWidth, maxWidth), aspectRatio);
+  }
+
+  function persistSize(size) {
+    onChange(block.id, {
+      content: {
+        ...block.content,
+        width: size.width,
+        height: size.height,
+      },
+    });
+  }
+
+  function handleResizeStart(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    onFocus();
+
+    const aspectRatio = getAspectRatio();
+    const initialSize = getDisplaySize();
+    resizeStateRef.current = {
+      startX: e.clientX,
+      startWidth: initialSize.width,
+      aspectRatio,
+    };
+
+    const handlePointerMove = (moveEvent) => {
+      const active = resizeStateRef.current;
+      if (!active) return;
+      const nextWidth = active.startWidth + (moveEvent.clientX - active.startX);
+      setDraftSize(clampSize(nextWidth, active.aspectRatio));
+    };
+
+    const handlePointerUp = () => {
+      const active = resizeStateRef.current;
+      resizeStateRef.current = null;
+      window.removeEventListener("mousemove", handlePointerMove);
+      window.removeEventListener("mouseup", handlePointerUp);
+
+      if (!active) return;
+      const finalSize = latestDraftSizeRef.current ?? clampSize(active.startWidth, active.aspectRatio);
+      setDraftSize(null);
+      persistSize(finalSize);
+    };
+
+    window.addEventListener("mousemove", handlePointerMove);
+    window.addEventListener("mouseup", handlePointerUp);
   }
 
   if (editing) {
@@ -477,22 +602,51 @@ function ImageBlock({ block, onFocus, onChange }) {
     );
   }
 
+  const displaySize = getDisplaySize();
+
   return (
-    <div className="relative" onClick={onFocus}>
+    <div ref={frameRef} className="relative inline-block max-w-full align-top" onClick={onFocus}>
       {!block.content?.url || imageFailed ? (
         <div className="flex min-h-48 w-full items-center justify-center rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 px-4 text-sm text-zinc-500">
           {block.content?.url ? "Image could not be loaded." : "Add an image URL to display this block."}
         </div>
       ) : (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={block.content?.url}
-          alt={block.content?.alt ?? ""}
-          className="max-h-96 w-full rounded-2xl border border-zinc-200 bg-white object-contain"
-          onError={() => {
-            setImageFailed(true);
-          }}
-        />
+        <div className="relative inline-block max-w-full">
+          {/* Keep the block sized to the image itself instead of stretching full width. */}
+          {/* Persist width/height so resized images survive re-renders and reloads. */}
+          {/* Clamp drag-resize to sensible bounds while preserving the natural ratio. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={block.content?.url}
+            alt={block.content?.alt ?? ""}
+            width={displaySize.width}
+            height={displaySize.height}
+            className="block rounded-2xl border border-zinc-200 bg-white object-contain"
+            style={{
+              width: `${displaySize.width}px`,
+              height: `${displaySize.height}px`,
+              maxWidth: "100%",
+            }}
+            onLoad={(e) => {
+              const img = e.currentTarget;
+              setImageFailed(false);
+              setNaturalSize({
+                width: img.naturalWidth || displaySize.width,
+                height: img.naturalHeight || displaySize.height,
+              });
+            }}
+            onError={() => {
+              setImageFailed(true);
+            }}
+          />
+          <button
+            type="button"
+            onMouseDown={handleResizeStart}
+            className="absolute bottom-2 right-2 h-4 w-4 cursor-se-resize rounded-sm border border-white/90 bg-black/60 text-transparent transition hover:bg-black/75"
+            aria-label="Resize image"
+            title="Resize image"
+          />
+        </div>
       )}
       <button
         type="button"
