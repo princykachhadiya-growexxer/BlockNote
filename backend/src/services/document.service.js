@@ -4,6 +4,8 @@ import { ApiError } from "../utils/ApiError.js";
 import { HTTP } from "../utils/httpStatus.js";
 import { normalizeBlockContent } from "../utils/richText.js";
 
+// ─── Select helpers ───────────────────────────────────────────────────────────
+
 function buildDocumentSelect(userId, schemaSupport) {
   return {
     id: true,
@@ -11,6 +13,10 @@ function buildDocumentSelect(userId, schemaSupport) {
     updated_at: true,
     ...(schemaSupport.shareCount ? { share_count: true } : {}),
     ...(schemaSupport.deletedAt ? { deleted_at: true } : {}),
+    // Include block types so the dashboard can filter on them
+    blocks: {
+      select: { type: true },
+    },
     _count: {
       select: {
         blocks: true,
@@ -23,18 +29,33 @@ function buildDocumentSelect(userId, schemaSupport) {
   };
 }
 
+/**
+ * Map a raw Prisma document to the API shape.
+ * Adds `blockTypes` — a deduplicated list of block type strings present
+ * in the document (e.g. ["paragraph", "heading", "code"]).
+ */
 function mapDocument(document, schemaSupport) {
+  // Collect unique block types from the included blocks relation
+  const blockTypes = document.blocks
+    ? [...new Set(document.blocks.map((b) => b.type))]
+    : [];
+
   return {
     id: document.id,
     title: document.title,
     updated_at: document.updated_at,
     shareCount: schemaSupport.shareCount ? (document.share_count ?? 0) : 0,
+    // _count.blocks is the real count; blocks array length == same but is used for types
     blockCount: document._count?.blocks ?? 0,
     isDeleted: schemaSupport.deletedAt ? Boolean(document.deleted_at) : false,
     deleted_at: schemaSupport.deletedAt ? document.deleted_at : null,
     isStarred: Boolean(document.stars?.length),
+    // ── NEW: block types for dashboard filtering ──
+    blockTypes,
   };
 }
+
+// ─── Private helpers (unchanged) ─────────────────────────────────────────────
 
 async function requireSoftDeleteSupport() {
   const schemaSupport = await getDocumentSchemaSupport();
@@ -71,6 +92,8 @@ async function assertOwnedDocument(id, userId, { allowDeleted = true } = {}) {
   };
 }
 
+// ─── Public service functions ─────────────────────────────────────────────────
+
 export const getDocuments = async (
   userId,
   { starredOnly = false, trashedOnly = false } = {}
@@ -102,6 +125,15 @@ export const getDocuments = async (
   return documents.map((document) => mapDocument(document, schemaSupport));
 };
 
+/**
+ * getDashboardAnalytics
+ *
+ * Extended to include `blockTypes` on each document so the frontend
+ * filter bar can offer block-type filtering without extra round-trips.
+ *
+ * Performance note: we fetch blocks.type in the same query via the
+ * `blocks` relation select — no extra DB call per document.
+ */
 export const getDashboardAnalytics = async (userId) => {
   const schemaSupport = await getDocumentSchemaSupport();
 
@@ -147,6 +179,8 @@ export const getDashboardAnalytics = async (userId) => {
     documents: documents.map((document) => mapDocument(document, schemaSupport)),
   };
 };
+
+// ─── All remaining functions are UNCHANGED ───────────────────────────────────
 
 export const createDocument = async (userId) => {
   const schemaSupport = await getDocumentSchemaSupport();
