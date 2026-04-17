@@ -257,6 +257,8 @@ export default function Block({
     if (e.key === "Backspace") {
       const selection = window.getSelection();
       const range = selection?.rangeCount ? selection.getRangeAt(0) : null;
+      // Only hand off to the editor-level merge/delete logic when the caret is
+      // collapsed at the very start of this block.
       const atStart = range ? range.collapsed && isAtStartOfElement(el, range) : true;
 
       if (atStart) {

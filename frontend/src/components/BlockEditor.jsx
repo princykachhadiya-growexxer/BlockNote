@@ -16,11 +16,7 @@ import {
   apiReorderBlocks,
   apiUpdateDocTitle,
 } from "@/lib/blocks-api";
-import {
-  BASE_STEP,
-  midpoint,
-  buildRenormList,
-} from "@/lib/order-index";
+import { BASE_STEP, midpoint, buildRenormList } from "@/lib/order-index";
 import {
   isBlockEmpty,
   mergeBlockContent,
@@ -55,7 +51,7 @@ export default function BlockEditor({ docId, initialTitle, shareToken }) {
 
   const sortedBlocks = useMemo(
     () => [...blocks].sort((a, b) => a.order_index - b.order_index),
-    [blocks]
+    [blocks],
   );
 
   const editorStatus = useMemo(() => {
@@ -98,7 +94,11 @@ export default function BlockEditor({ docId, initialTitle, shareToken }) {
           router.replace("/login");
           return;
         }
-        if (err?.status === 403 || err?.status === 404 || err?.message?.includes("Not found")) {
+        if (
+          err?.status === 403 ||
+          err?.status === 404 ||
+          err?.message?.includes("Not found")
+        ) {
           setError("Document not found or access denied.");
         } else {
           setError("Failed to load document.");
@@ -168,7 +168,15 @@ export default function BlockEditor({ docId, initialTitle, shareToken }) {
     const entries = [...pendingSaves.current.values()];
     const hasSaving = entries.some((entry) => entry.controller);
     const hasPending = entries.some((entry) => entry.timer);
-    setBlockSaveStatus(hasSaving ? "saving" : hasPending ? "pending" : entries.length ? "pending" : "saved");
+    setBlockSaveStatus(
+      hasSaving
+        ? "saving"
+        : hasPending
+          ? "pending"
+          : entries.length
+            ? "pending"
+            : "saved",
+    );
   }
 
   function cancelPendingSave(blockId) {
@@ -182,7 +190,9 @@ export default function BlockEditor({ docId, initialTitle, shareToken }) {
 
   function updateLocalBlock(blockId, updater) {
     setBlocks((prev) =>
-      prev.map((block) => (block.id === blockId ? normalizeLoadedBlock(updater(block)) : block))
+      prev.map((block) =>
+        block.id === blockId ? normalizeLoadedBlock(updater(block)) : block,
+      ),
     );
   }
 
@@ -193,13 +203,22 @@ export default function BlockEditor({ docId, initialTitle, shareToken }) {
     if (!current) return;
 
     setTogglingStarIds((prev) => [...prev, blockId]);
-    updateLocalBlock(blockId, (block) => ({ ...block, isStarred: !block.isStarred }));
+    updateLocalBlock(blockId, (block) => ({
+      ...block,
+      isStarred: !block.isStarred,
+    }));
 
     try {
       const result = await apiToggleBlockStar(blockId);
-      updateLocalBlock(blockId, (block) => ({ ...block, isStarred: result.isStarred }));
+      updateLocalBlock(blockId, (block) => ({
+        ...block,
+        isStarred: result.isStarred,
+      }));
     } catch (err) {
-      updateLocalBlock(blockId, (block) => ({ ...block, isStarred: current.isStarred }));
+      updateLocalBlock(blockId, (block) => ({
+        ...block,
+        isStarred: current.isStarred,
+      }));
       if (err?.status === 401) {
         clearAuthSession();
         router.replace("/login");
@@ -211,7 +230,11 @@ export default function BlockEditor({ docId, initialTitle, shareToken }) {
     }
   }
 
-  async function ensureInsertGap(prevIndex, nextIndex, currentBlocks = sortedBlocks) {
+  async function ensureInsertGap(
+    prevIndex,
+    nextIndex,
+    currentBlocks = sortedBlocks,
+  ) {
     if (
       prevIndex != null &&
       nextIndex != null &&
@@ -225,7 +248,7 @@ export default function BlockEditor({ docId, initialTitle, shareToken }) {
             const match = normalized.find((item) => item.id === block.id);
             return match ? { ...block, order_index: match.order_index } : block;
           })
-          .sort((a, b) => a.order_index - b.order_index)
+          .sort((a, b) => a.order_index - b.order_index),
       );
       return normalized;
     }
@@ -268,47 +291,58 @@ export default function BlockEditor({ docId, initialTitle, shareToken }) {
     return null;
   }
 
-  const scheduleBlockSave = useCallback((blockId, fields) => {
-    const existing = pendingSaves.current.get(blockId);
-    if (existing?.timer) clearTimeout(existing.timer);
-    if (existing?.controller) existing.controller.abort();
+  const scheduleBlockSave = useCallback(
+    (blockId, fields) => {
+      const existing = pendingSaves.current.get(blockId);
+      if (existing?.timer) clearTimeout(existing.timer);
+      if (existing?.controller) existing.controller.abort();
 
-    const timer = setTimeout(async () => {
-      const controller = new AbortController();
-      pendingSaves.current.set(blockId, { controller });
-      refreshBlockSaveStatus();
-
-      try {
-        const updated = await apiUpdateBlock(docId, blockId, fields, controller.signal);
-        updateLocalBlock(blockId, () => updated);
-      } catch (err) {
-        if (err?.name === "AbortError") return;
-        console.error("[block save]", err);
-        setBlockSaveStatus("error");
-        return;
-      } finally {
-        pendingSaves.current.delete(blockId);
+      const timer = setTimeout(async () => {
+        const controller = new AbortController();
+        pendingSaves.current.set(blockId, { controller });
         refreshBlockSaveStatus();
-      }
-    }, 1000);
 
-    pendingSaves.current.set(blockId, { timer });
-    refreshBlockSaveStatus();
-  }, [docId]);
+        try {
+          const updated = await apiUpdateBlock(
+            docId,
+            blockId,
+            fields,
+            controller.signal,
+          );
+          updateLocalBlock(blockId, () => updated);
+        } catch (err) {
+          if (err?.name === "AbortError") return;
+          console.error("[block save]", err);
+          setBlockSaveStatus("error");
+          return;
+        } finally {
+          pendingSaves.current.delete(blockId);
+          refreshBlockSaveStatus();
+        }
+      }, 1000);
 
-  const handleBlockChange = useCallback((blockId, fields) => {
-    if (!fields?.content) return;
+      pendingSaves.current.set(blockId, { timer });
+      refreshBlockSaveStatus();
+    },
+    [docId],
+  );
 
-    setBlocks((prev) =>
-      prev.map((block) =>
-        block.id === blockId
-          ? normalizeLoadedBlock({ ...block, content: fields.content })
-          : block
-      )
-    );
+  const handleBlockChange = useCallback(
+    (blockId, fields) => {
+      if (!fields?.content) return;
 
-    scheduleBlockSave(blockId, { content: fields.content });
-  }, [scheduleBlockSave]);
+      setBlocks((prev) =>
+        prev.map((block) =>
+          block.id === blockId
+            ? normalizeLoadedBlock({ ...block, content: fields.content })
+            : block,
+        ),
+      );
+
+      scheduleBlockSave(blockId, { content: fields.content });
+    },
+    [scheduleBlockSave],
+  );
 
   function handleTitleChange(e) {
     const nextTitle = e.target.value;
@@ -323,7 +357,11 @@ export default function BlockEditor({ docId, initialTitle, shareToken }) {
       titleAbort.current = controller;
       setTitleStatus("saving");
       try {
-        await apiUpdateDocTitle(docId, nextTitle || "Untitled", controller.signal);
+        await apiUpdateDocTitle(
+          docId,
+          nextTitle || "Untitled",
+          controller.signal,
+        );
         if (!controller.signal.aborted) setTitleStatus("saved");
       } catch (err) {
         if (err?.name === "AbortError") return;
@@ -352,24 +390,43 @@ export default function BlockEditor({ docId, initialTitle, shareToken }) {
         return;
       }
 
-      const targetIndex = currentBlocks.findIndex((block) => block.id === targetId);
-      const anchor = currentBlocks[targetIndex === -1 ? currentBlocks.length - 1 : targetIndex];
+      const targetIndex = currentBlocks.findIndex(
+        (block) => block.id === targetId,
+      );
+      const anchor =
+        currentBlocks[
+          targetIndex === -1 ? currentBlocks.length - 1 : targetIndex
+        ];
       const next = currentBlocks[targetIndex + 1] ?? null;
 
-      const normalizedIndices = await ensureInsertGap(anchor.order_index, next?.order_index ?? null, currentBlocks);
+      const normalizedIndices = await ensureInsertGap(
+        anchor.order_index,
+        next?.order_index ?? null,
+        currentBlocks,
+      );
       if (normalizedIndices) {
         currentBlocks = currentBlocks
           .map((block) => {
-            const nextValue = normalizedIndices.find((item) => item.id === block.id);
-            return nextValue ? { ...block, order_index: nextValue.order_index } : block;
+            const nextValue = normalizedIndices.find(
+              (item) => item.id === block.id,
+            );
+            return nextValue
+              ? { ...block, order_index: nextValue.order_index }
+              : block;
           })
           .sort((a, b) => a.order_index - b.order_index);
       }
 
-      const refreshedAnchor = currentBlocks.find((block) => block.id === anchor.id) ?? anchor;
-      const refreshedTargetIndex = currentBlocks.findIndex((block) => block.id === refreshedAnchor.id);
+      const refreshedAnchor =
+        currentBlocks.find((block) => block.id === anchor.id) ?? anchor;
+      const refreshedTargetIndex = currentBlocks.findIndex(
+        (block) => block.id === refreshedAnchor.id,
+      );
       const refreshedNext = currentBlocks[refreshedTargetIndex + 1] ?? null;
-      const orderIndex = midpoint(refreshedAnchor.order_index, refreshedNext?.order_index ?? null);
+      const orderIndex = midpoint(
+        refreshedAnchor.order_index,
+        refreshedNext?.order_index ?? null,
+      );
 
       const created = await apiCreateBlock(docId, {
         type: "paragraph",
@@ -378,7 +435,9 @@ export default function BlockEditor({ docId, initialTitle, shareToken }) {
       });
 
       const normalized = normalizeLoadedBlock(created);
-      setBlocks((prev) => [...prev, normalized].sort((a, b) => a.order_index - b.order_index));
+      setBlocks((prev) =>
+        [...prev, normalized].sort((a, b) => a.order_index - b.order_index),
+      );
       setFocusedId(normalized.id);
       requestAnimationFrame(() => focusBlockStart(normalized.id));
     } catch (err) {
@@ -390,7 +449,9 @@ export default function BlockEditor({ docId, initialTitle, shareToken }) {
 
   async function handleEnter(blockId, splitPayload) {
     const currentBlocks = [...sortedBlocks];
-    const currentIndex = currentBlocks.findIndex((block) => block.id === blockId);
+    const currentIndex = currentBlocks.findIndex(
+      (block) => block.id === blockId,
+    );
     const block = currentBlocks[currentIndex];
     if (!block) return;
 
@@ -401,23 +462,68 @@ export default function BlockEditor({ docId, initialTitle, shareToken }) {
 
     cancelPendingSave(blockId);
 
+    // ✅ CASE 1: START → insert ABOVE
+    if (splitPayload.atStart) {
+      const prev = currentBlocks[currentIndex - 1] ?? null;
+
+      const orderIndex = midpoint(prev?.order_index ?? null, block.order_index);
+
+      const created = await apiCreateBlock(docId, {
+        type: "paragraph",
+        content: { text: "", html: "" },
+        order_index: orderIndex,
+      });
+
+      const normalized = normalizeLoadedBlock(created);
+
+      setBlocks((prev) =>
+        [...prev, normalized].sort((a, b) => a.order_index - b.order_index),
+      );
+
+      setFocusedId(normalized.id);
+      requestAnimationFrame(() => focusBlockStart(normalized.id));
+      return;
+    }
+
+    // ✅ CASE 2: END → insert BELOW
+    if (splitPayload.atEnd) {
+      await insertBlockBelow(blockId);
+      return;
+    }
+
+    // ✅ CASE 3: MIDDLE → split
     try {
       let workingBlocks = currentBlocks;
       const next = workingBlocks[currentIndex + 1] ?? null;
-      const normalizedIndices = await ensureInsertGap(block.order_index, next?.order_index ?? null, workingBlocks);
+
+      const normalizedIndices = await ensureInsertGap(
+        block.order_index,
+        next?.order_index ?? null,
+        workingBlocks,
+      );
+
       if (normalizedIndices) {
         workingBlocks = workingBlocks
           .map((item) => {
-            const nextValue = normalizedIndices.find((value) => value.id === item.id);
-            return nextValue ? { ...item, order_index: nextValue.order_index } : item;
+            const nextValue = normalizedIndices.find(
+              (value) => value.id === item.id,
+            );
+            return nextValue
+              ? { ...item, order_index: nextValue.order_index }
+              : item;
           })
           .sort((a, b) => a.order_index - b.order_index);
       }
 
-      const freshBlock = workingBlocks.find((item) => item.id === blockId) ?? block;
+      const freshBlock =
+        workingBlocks.find((item) => item.id === blockId) ?? block;
       const freshIndex = workingBlocks.findIndex((item) => item.id === blockId);
       const freshNext = workingBlocks[freshIndex + 1] ?? null;
-      const rightOrderIndex = midpoint(freshBlock.order_index, freshNext?.order_index ?? null);
+
+      const rightOrderIndex = midpoint(
+        freshBlock.order_index,
+        freshNext?.order_index ?? null,
+      );
 
       const result = await apiSplitBlock(docId, blockId, {
         leftContent: splitPayload.leftContent,
@@ -433,11 +539,29 @@ export default function BlockEditor({ docId, initialTitle, shareToken }) {
           normalizeLoadedBlock(result.right),
         ].sort((a, b) => a.order_index - b.order_index);
       });
+
       setFocusedId(result.right.id);
       requestAnimationFrame(() => focusBlockStart(result.right.id));
     } catch (err) {
       console.error("[split block]", err);
     }
+  }
+
+  function isCursorAtStart(blockId) {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return false;
+
+    const range = sel.getRangeAt(0);
+    const ref = blockRefsMap.current.get(blockId);
+    const el = ref?.current;
+
+    if (!el) return false;
+
+    const preRange = range.cloneRange();
+    preRange.selectNodeContents(el);
+    preRange.setEnd(range.startContainer, range.startOffset);
+
+    return preRange.toString().length === 0;
   }
 
   async function handleBackspace(blockId) {
@@ -450,7 +574,7 @@ export default function BlockEditor({ docId, initialTitle, shareToken }) {
       return;
     }
 
-    if (isBlockEmpty(block.content)) {
+    if (isBlockEmpty(block.content) && isCursorAtStart(blockId)) {
       const previousTextBlock = findPreviousTextBlock(currentBlocks, index);
       cancelPendingSave(blockId);
       try {
@@ -466,31 +590,55 @@ export default function BlockEditor({ docId, initialTitle, shareToken }) {
       return;
     }
 
-    const previousTextBlock = findPreviousTextBlock(currentBlocks, index);
-    if (!previousTextBlock) {
+    const previousBlock = currentBlocks[index - 1];
+    // ✅ IMPORTANT: Only merge when cursor is at start
+    if (!isCursorAtStart(blockId)) {
+      return;
+    }
+    if (!previousBlock) {
+      return;
+    }
+
+    // Non-empty blocks should only merge with their immediate previous neighbor.
+    // If that block is a structural block like image/divider, keep the current
+    // block intact and surface a small toast instead of deleting anything.
+    if (NON_TEXT_TYPES.has(previousBlock.type)) {
+      showToast("Cannot merge with this block type");
       return;
     }
 
     cancelPendingSave(blockId);
-    cancelPendingSave(previousTextBlock.id);
+    cancelPendingSave(previousBlock.id);
 
-    const mergedContent = mergeBlockContent(previousTextBlock.content, block.content);
+    const mergedContent = mergeBlockContent(
+      previousBlock.content,
+      block.content,
+    );
 
+    // ✅ 1. Update UI immediately (optimistic)
+    setBlocks((prev) =>
+      prev
+        .filter((item) => item.id !== blockId)
+        .map((item) =>
+          item.id === previousBlock.id
+            ? normalizeLoadedBlock({
+                ...previousBlock,
+                content: mergedContent,
+              })
+            : item,
+        ),
+    );
+
+    // ✅ 2. Focus immediately
+    setFocusedId(previousBlock.id);
+    requestAnimationFrame(() => focusBlockEnd(previousBlock.id));
+
+    // ✅ 3. Call APIs in background
     try {
-      const merged = await apiUpdateBlock(docId, previousTextBlock.id, {
+      await apiUpdateBlock(docId, previousBlock.id, {
         content: mergedContent,
       });
       await apiDeleteBlock(docId, blockId);
-
-      setBlocks((prev) =>
-        prev
-          .filter((item) => item.id !== blockId)
-          .map((item) =>
-            item.id === previousTextBlock.id ? normalizeLoadedBlock(merged) : item
-          )
-      );
-      setFocusedId(previousTextBlock.id);
-      requestAnimationFrame(() => focusBlockEnd(previousTextBlock.id));
     } catch (err) {
       console.error("[merge block]", err);
     }
@@ -512,7 +660,11 @@ export default function BlockEditor({ docId, initialTitle, shareToken }) {
           html: current.content?.html ?? "",
         });
 
-    updateLocalBlock(blockId, (block) => ({ ...block, type: newType, content: nextContent }));
+    updateLocalBlock(blockId, (block) => ({
+      ...block,
+      type: newType,
+      content: nextContent,
+    }));
 
     try {
       await apiUpdateBlock(docId, blockId, {
@@ -550,13 +702,18 @@ export default function BlockEditor({ docId, initialTitle, shareToken }) {
       return;
     }
 
-    const newIndex = midpoint(previous?.order_index ?? null, next?.order_index ?? null);
+    const newIndex = midpoint(
+      previous?.order_index ?? null,
+      next?.order_index ?? null,
+    );
     reordered = reordered.map((block) =>
-      block.id === movedId ? { ...block, order_index: newIndex } : block
+      block.id === movedId ? { ...block, order_index: newIndex } : block,
     );
     const finalBlocks = reordered.sort((a, b) => a.order_index - b.order_index);
     setBlocks(finalBlocks);
-    const response = await apiReorderBlocks(docId, [{ id: movedId, order_index: newIndex }]);
+    const response = await apiReorderBlocks(docId, [
+      { id: movedId, order_index: newIndex },
+    ]);
 
     if (response.renormalized && response.blocks?.length) {
       setBlocks((prev) =>
@@ -565,7 +722,7 @@ export default function BlockEditor({ docId, initialTitle, shareToken }) {
             const match = response.blocks.find((item) => item.id === block.id);
             return match ? { ...block, order_index: match.order_index } : block;
           })
-          .sort((a, b) => a.order_index - b.order_index)
+          .sort((a, b) => a.order_index - b.order_index),
       );
     }
   }
@@ -580,7 +737,8 @@ export default function BlockEditor({ docId, initialTitle, shareToken }) {
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
     const rect = e.currentTarget.getBoundingClientRect();
-    const position = e.clientY < rect.top + rect.height / 2 ? "before" : "after";
+    const position =
+      e.clientY < rect.top + rect.height / 2 ? "before" : "after";
     setDropTarget({ id: blockId, position });
   }
 
@@ -594,17 +752,23 @@ export default function BlockEditor({ docId, initialTitle, shareToken }) {
     if (!sourceId || sourceId === targetBlockId) return;
 
     const currentBlocks = [...sortedBlocks];
-    const sourceIndex = currentBlocks.findIndex((block) => block.id === sourceId);
-    const targetIndex = currentBlocks.findIndex((block) => block.id === targetBlockId);
+    const sourceIndex = currentBlocks.findIndex(
+      (block) => block.id === sourceId,
+    );
+    const targetIndex = currentBlocks.findIndex(
+      (block) => block.id === targetBlockId,
+    );
     if (sourceIndex === -1 || targetIndex === -1) return;
 
     const reordered = [...currentBlocks];
     const [moved] = reordered.splice(sourceIndex, 1);
-    const dropAfter = activeDropTarget?.id === targetBlockId
-      ? activeDropTarget.position === "after"
-      : true;
+    const dropAfter =
+      activeDropTarget?.id === targetBlockId
+        ? activeDropTarget.position === "after"
+        : true;
     const rawInsertIndex = dropAfter ? targetIndex + 1 : targetIndex;
-    const insertIndex = sourceIndex < rawInsertIndex ? rawInsertIndex - 1 : rawInsertIndex;
+    const insertIndex =
+      sourceIndex < rawInsertIndex ? rawInsertIndex - 1 : rawInsertIndex;
     reordered.splice(insertIndex, 0, moved);
 
     try {
@@ -671,10 +835,12 @@ export default function BlockEditor({ docId, initialTitle, shareToken }) {
                 dropTarget?.id === block.id ? "bg-[#D1E9F6]/35" : ""
               }`}
             >
-              {dropTarget?.id === block.id && dropTarget.position === "before" ? (
+              {dropTarget?.id === block.id &&
+              dropTarget.position === "before" ? (
                 <div className="absolute inset-x-2 top-0 h-0.5 rounded-full bg-[#2D2D2D]" />
               ) : null}
-              {dropTarget?.id === block.id && dropTarget.position === "after" ? (
+              {dropTarget?.id === block.id &&
+              dropTarget.position === "after" ? (
                 <div className="absolute inset-x-2 bottom-0 h-0.5 rounded-full bg-[#2D2D2D]" />
               ) : null}
 
@@ -686,7 +852,11 @@ export default function BlockEditor({ docId, initialTitle, shareToken }) {
                 className="mt-0.5 flex shrink-0 cursor-grab items-center rounded-lg p-1 text-zinc-400 opacity-0 transition hover:bg-zinc-100 hover:text-zinc-700 group-hover/row:opacity-100 active:cursor-grabbing"
                 aria-label="Drag block"
               >
-                <svg className="h-4 w-4" viewBox="0 0 16 16" fill="currentColor">
+                <svg
+                  className="h-4 w-4"
+                  viewBox="0 0 16 16"
+                  fill="currentColor"
+                >
                   <circle cx="5" cy="4" r="1.2" />
                   <circle cx="5" cy="8" r="1.2" />
                   <circle cx="5" cy="12" r="1.2" />
@@ -705,9 +875,17 @@ export default function BlockEditor({ docId, initialTitle, shareToken }) {
                     ? "text-[#1A1A1A] opacity-100"
                     : "text-zinc-400 opacity-0 hover:bg-zinc-100 hover:text-zinc-700 group-hover/row:opacity-100"
                 } disabled:opacity-60`}
-                aria-label={block.isStarred ? "Remove star from block" : "Star block"}
+                aria-label={
+                  block.isStarred ? "Remove star from block" : "Star block"
+                }
               >
-                <svg className={`h-4 w-4 ${block.isStarred ? "fill-current" : ""}`} viewBox="0 0 20 20" fill={block.isStarred ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.5">
+                <svg
+                  className={`h-4 w-4 ${block.isStarred ? "fill-current" : ""}`}
+                  viewBox="0 0 20 20"
+                  fill={block.isStarred ? "currentColor" : "none"}
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                >
                   <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 0 0 .95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 0 0-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.539 1.118l-2.8-2.034a1 1 0 0 0-1.176 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 0 0-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81H7.03a1 1 0 0 0 .95-.69l1.07-3.292Z" />
                 </svg>
               </button>
@@ -715,11 +893,17 @@ export default function BlockEditor({ docId, initialTitle, shareToken }) {
               <button
                 type="button"
                 onClick={() => insertBlockBelow(block.id)}
-                disabled={creatingAfterId === block.id || creatingAfterId === "__root__"}
+                disabled={
+                  creatingAfterId === block.id || creatingAfterId === "__root__"
+                }
                 className="mt-0.5 flex shrink-0 items-center rounded-lg p-1 text-zinc-400 opacity-0 transition hover:bg-zinc-100 hover:text-zinc-700 group-hover/row:opacity-100 disabled:opacity-40"
                 aria-label="Add block below"
               >
-                <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                <svg
+                  className="h-4 w-4"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
                   <path d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" />
                 </svg>
               </button>
@@ -742,7 +926,11 @@ export default function BlockEditor({ docId, initialTitle, shareToken }) {
 
         <button
           type="button"
-          onClick={() => insertBlockBelow(focusedId ?? sortedBlocks[sortedBlocks.length - 1]?.id ?? null)}
+          onClick={() =>
+            insertBlockBelow(
+              focusedId ?? sortedBlocks[sortedBlocks.length - 1]?.id ?? null,
+            )
+          }
           disabled={creatingAfterId != null}
           className="mt-4 flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 disabled:opacity-50"
         >
@@ -770,7 +958,7 @@ function normalizeLoadedBlock(block) {
       content: {
         ...block.content,
         text: block.content?.text ?? "",
-        html: block.type === "code" ? "" : block.content?.html ?? "",
+        html: block.type === "code" ? "" : (block.content?.html ?? ""),
       },
     };
   }
