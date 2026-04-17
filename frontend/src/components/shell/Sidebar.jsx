@@ -37,6 +37,15 @@ const NAV_ITEMS = [
       </svg>
     ),
   },
+  {
+    href: "/guide",
+    label: "Guide",
+    icon: (
+      <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+        <path d="M5.5 3A2.5 2.5 0 0 0 3 5.5v9A2.5 2.5 0 0 0 5.5 17H15a2 2 0 0 0 2-2V6.56a2 2 0 0 0-.586-1.414l-1.56-1.56A2 2 0 0 0 13.44 3H5.5Zm0 1.5h7.19c.133 0 .26.053.354.146l1.81 1.81c.093.094.146.22.146.354V15a.5.5 0 0 1-.5.5H5.5a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1Zm2 3a.75.75 0 0 0 0 1.5h5a.75.75 0 0 0 0-1.5h-5Zm0 3a.75.75 0 0 0 0 1.5h5a.75.75 0 0 0 0-1.5h-5Z" />
+      </svg>
+    ),
+  },
 ];
 
 function getBlockLabel(block) {
