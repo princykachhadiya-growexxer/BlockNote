@@ -40,7 +40,9 @@ const BLOCK_TYPE_LABELS = {
 };
 
 function blockTypeLabel(type) {
-  return BLOCK_TYPE_LABELS[type] ?? type.charAt(0).toUpperCase() + type.slice(1);
+  return (
+    BLOCK_TYPE_LABELS[type] ?? type.charAt(0).toUpperCase() + type.slice(1)
+  );
 }
 
 // ─── Stat cards config (unchanged from original) ─────────────────────────────
@@ -136,7 +138,13 @@ function FilterBar({
             aria-expanded={blockTypeOpen}
           >
             {/* Stack icon */}
-            <svg className="h-4 w-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6">
+            <svg
+              className="h-4 w-4"
+              viewBox="0 0 20 20"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.6"
+            >
               <path d="M2 5h16M2 10h16M2 15h16" strokeLinecap="round" />
             </svg>
             Block type
@@ -152,7 +160,11 @@ function FilterBar({
               stroke="currentColor"
               strokeWidth="2"
             >
-              <path d="M2 4l4 4 4-4" strokeLinecap="round" strokeLinejoin="round" />
+              <path
+                d="M2 4l4 4 4-4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
           </button>
 
@@ -186,10 +198,22 @@ function FilterBar({
                       }`}
                     >
                       {/* Checkmark */}
-                      <span className={`h-4 w-4 shrink-0 rounded-md border flex items-center justify-center transition ${selected ? "border-[#2D2D2D] bg-[#2D2D2D]" : "border-[var(--muted)]"}`}>
+                      <span
+                        className={`h-4 w-4 shrink-0 rounded-md border flex items-center justify-center transition ${selected ? "border-[#2D2D2D] bg-[#2D2D2D]" : "border-[var(--muted)]"}`}
+                      >
                         {selected && (
-                          <svg className="h-2.5 w-2.5 text-white" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M1.5 5l3 3 4-4" strokeLinecap="round" strokeLinejoin="round" />
+                          <svg
+                            className="h-2.5 w-2.5 text-white"
+                            viewBox="0 0 10 10"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                          >
+                            <path
+                              d="M1.5 5l3 3 4-4"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
                           </svg>
                         )}
                       </span>
@@ -227,8 +251,17 @@ function FilterBar({
         }`}
         aria-pressed={showPinnedOnly}
       >
-        <svg className="h-4 w-4" viewBox="0 0 20 20" fill={showPinnedOnly ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.6">
-          <path d="M10 2.5L12.47 7.5H17.5L13.5 10.9L15 16L10 13L5 16L6.5 10.9L2.5 7.5H7.53L10 2.5Z" strokeLinejoin="round" />
+        <svg
+          className="h-4 w-4"
+          viewBox="0 0 20 20"
+          fill={showPinnedOnly ? "currentColor" : "none"}
+          stroke="currentColor"
+          strokeWidth="1.6"
+        >
+          <path
+            d="M10 2.5L12.47 7.5H17.5L13.5 10.9L15 16L10 13L5 16L6.5 10.9L2.5 7.5H7.53L10 2.5Z"
+            strokeLinejoin="round"
+          />
         </svg>
         Pinned
       </button>
@@ -240,7 +273,13 @@ function FilterBar({
           onClick={onReset}
           className="flex items-center gap-1 rounded-2xl border border-[#F9D8E6] bg-[#F9D8E6]/60 px-3 py-2 text-sm font-medium text-[#1A1A1A] transition hover:bg-[#F9D8E6]"
         >
-          <svg className="h-3.5 w-3.5" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg
+            className="h-3.5 w-3.5"
+            viewBox="0 0 14 14"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
             <path d="M1 1l12 12M13 1L1 13" strokeLinecap="round" />
           </svg>
           Clear {activeFilterCount} filter{activeFilterCount !== 1 ? "s" : ""}
@@ -300,7 +339,7 @@ export default function DashboardPage() {
       }
       setLoadError("Could not load your workspace data.");
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -356,9 +395,9 @@ export default function DashboardPage() {
         : {
             ...current,
             documents: current.documents.map((doc) =>
-              doc.id === id ? { ...doc, isStarred: !doc.isStarred } : doc
+              doc.id === id ? { ...doc, isStarred: !doc.isStarred } : doc,
             ),
-          }
+          },
     );
 
     try {
@@ -369,9 +408,9 @@ export default function DashboardPage() {
           : {
               ...current,
               documents: current.documents.map((doc) =>
-                doc.id === id ? { ...doc, isStarred: result.isStarred } : doc
+                doc.id === id ? { ...doc, isStarred: result.isStarred } : doc,
               ),
-            }
+            },
       );
     } catch (err) {
       setAnalytics(previous);
@@ -426,7 +465,6 @@ export default function DashboardPage() {
   return (
     <div className="min-h-full flex-1 px-4 py-8 sm:px-8">
       <div className="mx-auto max-w-6xl">
-
         {/* ── Header (unchanged) ── */}
         <header className="rounded-[2rem] border border-[var(--edge)] bg-[linear-gradient(135deg,rgba(183,188,232,0.88),rgba(209,233,246,0.74),rgba(255,255,255,0.94))] px-6 py-7 shadow-[0_28px_80px_rgba(74,83,120,0.14)]">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
@@ -438,8 +476,8 @@ export default function DashboardPage() {
                 Documents, activity, and everything worth revisiting
               </h1>
               <p className="mt-3 max-w-2xl text-sm leading-7 text-[#1A1A1A]/68">
-                Keep track of your writing space, see how often pages get shared, and move clutter
-                into Trash without losing it.
+                Keep track of your writing space, see how often pages get
+                shared, and move clutter into Trash without losing it.
               </p>
             </div>
 
@@ -469,7 +507,9 @@ export default function DashboardPage() {
               key={card.key}
               className={`rounded-[1.6rem] border border-[var(--edge)] ${card.tone} p-5 shadow-[0_18px_50px_rgba(74,83,120,0.08)]`}
             >
-              <p className="text-sm font-medium text-[#1A1A1A]/62">{card.label}</p>
+              <p className="text-sm font-medium text-[#1A1A1A]/62">
+                {card.label}
+              </p>
               <p className="mt-3 text-3xl font-semibold text-[#1A1A1A]">
                 {analytics?.totals?.[card.key] ?? 0}
               </p>
@@ -514,7 +554,9 @@ export default function DashboardPage() {
           {/* ── Empty state ── */}
           {allDocuments.length === 0 ? (
             <div className="mt-6 rounded-[1.75rem] border border-[var(--edge)] bg-[var(--surface)] p-10 text-center shadow-[0_18px_50px_rgba(74,83,120,0.08)]">
-              <p className="text-base font-medium text-[var(--foreground)]">No documents yet.</p>
+              <p className="text-base font-medium text-[var(--foreground)]">
+                No documents yet.
+              </p>
               <p className="mt-2 text-sm text-[var(--muted)]">
                 Create your first page to start building your block workspace.
               </p>
@@ -522,7 +564,9 @@ export default function DashboardPage() {
           ) : filteredDocuments.length === 0 ? (
             /* No results after filtering */
             <div className="mt-6 rounded-[1.75rem] border border-[var(--edge)] bg-[var(--surface)] p-10 text-center shadow-[0_18px_50px_rgba(74,83,120,0.08)]">
-              <p className="text-base font-medium text-[var(--foreground)]">No documents match your filters.</p>
+              <p className="text-base font-medium text-[var(--foreground)]">
+                No documents match your filters.
+              </p>
               <p className="mt-2 text-sm text-[var(--muted)]">
                 Try adjusting your search or filter criteria.
               </p>
@@ -537,157 +581,198 @@ export default function DashboardPage() {
           ) : (
             /* Document grid */
             <div className="mt-6 grid gap-4 lg:grid-cols-2">
-              {filteredDocuments.map((doc) => {
-                const isPinned = pinnedIds.has(doc.id);
-                return (
-                  <article
-                    key={doc.id}
-                    className="rounded-[1.7rem] border border-[var(--edge)] bg-[var(--surface)] p-5 shadow-[0_20px_60px_rgba(74,83,120,0.08)]"
-                  >
-                    <div className="flex items-start gap-3">
-                      {/* ── Star button (unchanged) ── */}
-                      <button
-                        type="button"
-                        onClick={() => void toggleStar(doc.id)}
-                        disabled={pendingStarIds.includes(doc.id)}
-                        className={`mt-1 inline-flex rounded-2xl p-2 transition ${
-                          doc.isStarred
-                            ? "bg-[#B7BCE8] text-[#1A1A1A]"
-                            : "bg-[#F6F8FD] text-[var(--muted)] hover:bg-[#D1E9F6] hover:text-[#1A1A1A]"
-                        } disabled:opacity-60`}
-                        aria-label={doc.isStarred ? "Remove star from document" : "Star document"}
-                      >
-                        <svg className="h-4 w-4" viewBox="0 0 20 20" fill={doc.isStarred ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.5">
-                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 0 0 .95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 0 0-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.539 1.118l-2.8-2.034a1 1 0 0 0-1.176 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 0 0-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81H7.03a1 1 0 0 0 .95-.69l1.07-3.292Z" />
-                        </svg>
-                      </button>
+              {[...filteredDocuments]
+                .sort((a, b) => {
+                  const aPinned = pinnedIds.has(a.id);
+                  const bPinned = pinnedIds.has(b.id);
 
-                      <div className="min-w-0 flex-1">
-                        {/* ── Title / rename (unchanged) ── */}
-                        {editingId === doc.id ? (
-                          <input
-                            autoFocus
-                            value={editTitle}
-                            onChange={(e) => setEditTitle(e.target.value)}
-                            onBlur={() => void commitRename(doc.id)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") e.target.blur();
-                              if (e.key === "Escape") {
-                                setEditingId(null);
-                                void load();
-                              }
-                            }}
-                            className="w-full rounded-2xl border border-[var(--edge)] bg-white px-3 py-2 text-base font-semibold text-[var(--foreground)] outline-none ring-[#B7BCE8] focus:ring-2"
-                          />
-                        ) : (
-                          <div className="flex items-center gap-2">
-                            <button
-                              type="button"
-                              onClick={() => startRename(doc)}
-                              className="block min-w-0 flex-1 truncate text-left text-lg font-semibold text-[var(--foreground)]"
-                              title="Click to rename"
-                            >
-                              {doc.title}
-                            </button>
-                            {/* ── Pin indicator badge ── */}
-                            {isPinned && (
-                              <span className="shrink-0 rounded-xl bg-[#B7BCE8]/40 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#1A1A1A]/70">
-                                Pinned
-                              </span>
-                            )}
-                          </div>
-                        )}
+                  if (aPinned === bPinned) return 0; // keep original order
+                  return aPinned ? -1 : 1; // pinned first
+                })
+                .map((doc) => {
+                  const isPinned = pinnedIds.has(doc.id);
+                  return (
+                    <article
+                      key={doc.id}
+                      className="rounded-[1.7rem] border border-[var(--edge)] bg-[var(--surface)] p-5 shadow-[0_20px_60px_rgba(74,83,120,0.08)]"
+                    >
+                      <div className="flex items-start gap-3">
+                        {/* ── Star button (unchanged) ── */}
+                        <button
+                          type="button"
+                          onClick={() => void toggleStar(doc.id)}
+                          disabled={pendingStarIds.includes(doc.id)}
+                          className={`mt-1 inline-flex rounded-2xl p-2 transition ${
+                            doc.isStarred
+                              ? "bg-[#B7BCE8] text-[#1A1A1A]"
+                              : "bg-[#F6F8FD] text-[var(--muted)] hover:bg-[#D1E9F6] hover:text-[#1A1A1A]"
+                          } disabled:opacity-60`}
+                          aria-label={
+                            doc.isStarred
+                              ? "Remove star from document"
+                              : "Star document"
+                          }
+                        >
+                          <svg
+                            className="h-4 w-4"
+                            viewBox="0 0 20 20"
+                            fill={doc.isStarred ? "currentColor" : "none"}
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                          >
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 0 0 .95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 0 0-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.539 1.118l-2.8-2.034a1 1 0 0 0-1.176 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 0 0-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81H7.03a1 1 0 0 0 .95-.69l1.07-3.292Z" />
+                          </svg>
+                        </button>
 
-                        {/* ── Block type tags (if API returns them) ── */}
-                        {doc.blockTypes?.length > 0 && (
-                          <div className="mt-2 flex flex-wrap gap-1">
-                            {[...new Set(doc.blockTypes)].map((type) => (
-                              <span
-                                key={type}
-                                className="rounded-lg bg-[#F6F8FD] px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[var(--muted)]"
+                        <div className="min-w-0 flex-1">
+                          {/* ── Title / rename (unchanged) ── */}
+                          {editingId === doc.id ? (
+                            <input
+                              autoFocus
+                              value={editTitle}
+                              onChange={(e) => setEditTitle(e.target.value)}
+                              onBlur={() => void commitRename(doc.id)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") e.target.blur();
+                                if (e.key === "Escape") {
+                                  setEditingId(null);
+                                  void load();
+                                }
+                              }}
+                              className="w-full rounded-2xl border border-[var(--edge)] bg-white px-3 py-2 text-base font-semibold text-[var(--foreground)] outline-none ring-[#B7BCE8] focus:ring-2"
+                            />
+                          ) : (
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => startRename(doc)}
+                                className="block min-w-0 flex-1 truncate text-left text-lg font-semibold text-[var(--foreground)]"
+                                title="Click to rename"
                               >
-                                {blockTypeLabel(type)}
-                              </span>
-                            ))}
-                          </div>
-                        )}
+                                {doc.title}
+                              </button>
+                              {/* ── Pin indicator badge ── */}
+                              {isPinned && (
+                                <span className="shrink-0 rounded-xl bg-[#B7BCE8]/40 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#1A1A1A]/70">
+                                  Pinned
+                                </span>
+                              )}
+                            </div>
+                          )}
 
-                        {/* ── Stats grid (unchanged layout) ── */}
-                        <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                          <div className="rounded-2xl bg-[#F6F8FD] px-3 py-3">
-                            <p className="text-[11px] uppercase tracking-[0.2em] text-[var(--muted)]">
-                              Shares
-                            </p>
-                            <p className="mt-1 text-lg font-semibold text-[#1A1A1A]">{doc.shareCount}</p>
+                          {/* ── Block type tags (if API returns them) ── */}
+                          {doc.blockTypes?.length > 0 && (
+                            <div className="mt-2 flex flex-wrap gap-1">
+                              {[...new Set(doc.blockTypes)].map((type) => (
+                                <span
+                                  key={type}
+                                  className="rounded-lg bg-[#F6F8FD] px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[var(--muted)]"
+                                >
+                                  {blockTypeLabel(type)}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* ── Stats grid (unchanged layout) ── */}
+                          <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                            <div className="rounded-2xl bg-[var(--bgCol)] px-3 py-3">
+                              <p className="text-[11px] uppercase tracking-[0.2em] text-muted">
+                                Shares
+                              </p>
+                              <p className="mt-1 text-lg font-semibold text-foreground">
+                                {doc.shareCount}
+                              </p>
+                            </div>
+
+                            <div className="rounded-2xl bg-accent-light px-3 py-3">
+                              <p className="text-[11px] uppercase tracking-[0.2em] text-muted">
+                                Blocks
+                              </p>
+                              <p className="mt-1 text-lg font-semibold text-foreground">
+                                {doc.blockCount}
+                              </p>
+                            </div>
+
+                            <div className="rounded-2xl bg-accent-green px-3 py-3">
+                              <p className="text-[11px] uppercase tracking-[0.2em] text-muted">
+                                Starred
+                              </p>
+                              <p className="mt-1 text-lg font-semibold text-foreground">
+                                {doc.isStarred ? "Yes" : "No"}
+                              </p>
+                            </div>
                           </div>
-                          <div className="rounded-2xl bg-[#D1E9F6]/60 px-3 py-3">
-                            <p className="text-[11px] uppercase tracking-[0.2em] text-[var(--muted)]">
-                              Blocks
-                            </p>
-                            <p className="mt-1 text-lg font-semibold text-[#1A1A1A]">{doc.blockCount}</p>
-                          </div>
-                          <div className="rounded-2xl bg-[#E1F0D7]/70 px-3 py-3">
-                            <p className="text-[11px] uppercase tracking-[0.2em] text-[var(--muted)]">
-                              Starred
-                            </p>
-                            <p className="mt-1 text-lg font-semibold text-[#1A1A1A]">
-                              {doc.isStarred ? "Yes" : "No"}
-                            </p>
-                          </div>
+
+                          <p className="mt-4 text-xs text-[var(--muted)]">
+                            Updated {formatUpdated(doc.updated_at)}
+                          </p>
                         </div>
-
-                        <p className="mt-4 text-xs text-[var(--muted)]">
-                          Updated {formatUpdated(doc.updated_at)}
-                        </p>
                       </div>
-                    </div>
 
-                    {/* ── Actions (pin added, rest unchanged) ── */}
-                    <div className="mt-5 flex flex-wrap gap-2">
-                      <Link
-                        href={`/documents/${doc.id}`}
-                        className="inline-flex items-center justify-center rounded-2xl bg-[#2D2D2D] px-4 py-2 text-sm font-semibold text-white transition hover:bg-black"
-                      >
-                        Open
-                      </Link>
+                      {/* ── Actions (pin added, rest unchanged) ── */}
+                      <div className="mt-5 flex flex-wrap gap-2">
+                        <Link
+                          href={`/documents/${doc.id}`}
+                          className="inline-flex items-center justify-center rounded-2xl bg-[#2D2D2D] px-4 py-2 text-sm font-semibold text-white transition hover:bg-black"
+                        >
+                          Open
+                        </Link>
 
-                      {/* ── Pin / Unpin button (new) ── */}
-                      <button
-                        type="button"
-                        onClick={() => togglePin(doc.id)}
-                        className={`inline-flex items-center justify-center gap-1.5 rounded-2xl border px-4 py-2 text-sm font-semibold transition ${
-                          isPinned
-                            ? "border-[#B7BCE8] bg-[#B7BCE8]/30 text-[#1A1A1A] hover:bg-[#B7BCE8]/50"
-                            : "border-[var(--edge)] bg-[#F6F8FD] text-[var(--foreground)] hover:bg-[#D1E9F6]/60"
-                        }`}
-                        aria-label={isPinned ? "Unpin document" : "Pin document"}
-                        aria-pressed={isPinned}
-                      >
-                        <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill={isPinned ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.6">
-                          <path d="M10 2.5L12.47 7.5H17.5L13.5 10.9L15 16L10 13L5 16L6.5 10.9L2.5 7.5H7.53L10 2.5Z" strokeLinejoin="round" />
-                        </svg>
-                        {isPinned ? "Unpin" : "Pin"}
-                      </button>
+                        {/* ── Pin / Unpin button (new) ── */}
+                        <button
+                          type="button"
+                          onClick={() => togglePin(doc.id)}
+                          className={`inline-flex items-center gap-1.5 rounded-2xl border px-4 py-2 text-sm font-semibold transition
+    ${
+      isPinned
+        ? "border-accent bg-accent/30 text-foreground hover:bg-accent/40"
+        : "border-[var(--edge)] bg-[var(--surface)] text-[var(--muted)] hover:bg-[var(--surface-muted)] hover:text-[var(--foreground)]"
+    }`}
+                          aria-label={
+                            isPinned ? "Unpin document" : "Pin document"
+                          }
+                          aria-pressed={isPinned}
+                        >
+                          {/* Bookmark Pin Icon */}
+                          <svg
+                            className={`h-3.5 w-3.5 transition ${
+                              isPinned ? "text-accent" : ""
+                            }`}
+                            viewBox="0 0 20 20"
+                            fill={isPinned ? "currentColor" : "none"}
+                            stroke="currentColor"
+                            strokeWidth="1.6"
+                          >
+                            <path
+                              d="M6 3h8a1 1 0 0 1 1 1v13l-5-3-5 3V4a1 1 0 0 1 1-1z"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
 
-                      <button
-                        type="button"
-                        onClick={() => void moveToTrash(doc.id)}
-                        disabled={pendingTrashIds.includes(doc.id)}
-                        className="inline-flex items-center justify-center rounded-2xl border border-[#F9D8E6] bg-[#F9D8E6]/80 px-4 py-2 text-sm font-semibold text-[#1A1A1A] transition hover:bg-[#F9D8E6] disabled:opacity-60"
-                      >
-                        Move to Trash
-                      </button>
-                    </div>
-                  </article>
-                );
-              })}
+                          {isPinned ? "Pinned" : "Pin"}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => void moveToTrash(doc.id)}
+                          disabled={pendingTrashIds.includes(doc.id)}
+                          className="inline-flex items-center justify-center rounded-2xl border border-[#F9D8E6] bg-[#F9D8E6]/80 px-4 py-2 text-sm font-semibold text-[#1A1A1A] transition hover:bg-[#F9D8E6] disabled:opacity-60"
+                        >
+                          Move to Trash
+                        </button>
+                      </div>
+                    </article>
+                  );
+                })}
             </div>
           )}
 
           {/* ── Results summary when filters are active ── */}
           {activeFilterCount > 0 && allDocuments.length > 0 && (
             <p className="mt-4 text-xs text-[var(--muted)]">
-              Showing {filteredDocuments.length} of {allDocuments.length} document
+              Showing {filteredDocuments.length} of {allDocuments.length}{" "}
+              document
               {allDocuments.length !== 1 ? "s" : ""}
             </p>
           )}
