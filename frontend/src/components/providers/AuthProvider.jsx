@@ -1,11 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import {
-  getAccessToken,
-  setAccessToken,
-  clearAccessToken,
-} from "@/lib/browser-auth";
+import { clearAccessToken } from "@/lib/browser-auth";
 
 const AuthContext = createContext(null);
 
@@ -18,47 +14,39 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     async function bootstrap() {
       try {
-        const token = getAccessToken();
-        let sessionRestored = false;
+        try {
+          const me = await fetch("/api/auth/me", {
+            credentials: "include",
+          });
 
-        if (token) {
-          try {
-            const res = await fetch("/api/auth/me", {
-              headers: { Authorization: `Bearer ${token}` },
-              credentials: "include",
-            });
-
-            if (res.ok) {
-              const data = await res.json();
-              setUser(data.user ?? null);
-              sessionRestored = true;
-            } else {
-              clearAccessToken();
-            }
-          } catch {
+          if (me.ok) {
+            const data = await me.json();
             clearAccessToken();
+            setUser(data.user ?? null);
+            return;
           }
+        } catch {
+          // Fall through to refresh so existing refresh-cookie sessions can
+          // still bootstrap without changing the UX.
         }
 
-        if (!sessionRestored) {
-          try {
-            const res = await fetch("/api/auth/refresh", {
-              method: "POST",
-              credentials: "include",
-            });
+        try {
+          const res = await fetch("/api/auth/refresh", {
+            method: "POST",
+            credentials: "include",
+          });
 
-            if (res.ok) {
-              const data = await res.json();
-              setAccessToken(data.accessToken);
-              setUser(data.user ?? null);
-            } else {
-              clearAccessToken();
-              setUser(null);
-            }
-          } catch {
+          if (res.ok) {
+            const data = await res.json();
+            clearAccessToken();
+            setUser(data.user ?? null);
+          } else {
             clearAccessToken();
             setUser(null);
           }
+        } catch {
+          clearAccessToken();
+          setUser(null);
         }
       } finally {
         setInitialized(true);
@@ -76,7 +64,7 @@ export function AuthProvider({ children }) {
 
       /** Call after a successful login or register API response. */
       setAuthSession(session) {
-        setAccessToken(session.accessToken);
+        clearAccessToken();
         setUser(session.user ?? null);
       },
 
