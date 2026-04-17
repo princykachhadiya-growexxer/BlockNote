@@ -94,7 +94,7 @@ export default function Block({
   if (block.type === "divider") {
     return (
       <div id={`block-${block.id}`} className="group relative my-4 flex cursor-default items-center scroll-mt-28" onClick={onFocus}>
-        <hr className="w-full border-zinc-300" />
+        <hr className="w-full border-[var(--edge)]" />
       </div>
     );
   }
@@ -349,7 +349,7 @@ export default function Block({
           type="checkbox"
           checked={!!block.content?.checked}
           onChange={handleTodoCheck}
-          className="mt-1 h-4 w-4 shrink-0 cursor-pointer rounded border-zinc-300 text-accent focus:ring-accent"
+          className="mt-1 h-4 w-4 shrink-0 cursor-pointer rounded border-[var(--edge)] bg-[var(--surface)] text-accent focus:ring-accent"
         />
       )}
 
@@ -393,12 +393,12 @@ export default function Block({
 function FloatingToolbar({ top, left, blockType, onBold, onItalic, onConvert }) {
   return (
     <div
-      className="fixed z-50 flex -translate-x-1/2 items-center gap-1 rounded-2xl border border-[#1A1A1A]/10 bg-white/95 p-1.5 shadow-[0_14px_40px_rgba(60,72,105,0.16)] backdrop-blur"
+      className="fixed z-50 flex -translate-x-1/2 items-center gap-1 rounded-2xl border border-[var(--edge)] bg-[color:color-mix(in_srgb,var(--surface)_95%,transparent)] p-1.5 shadow-[0_14px_40px_rgba(60,72,105,0.16)] backdrop-blur"
       style={{ top, left }}
     >
       <ToolbarButton label="B" onMouseDown={preventBlur} onClick={onBold} />
       <ToolbarButton label="I" onMouseDown={preventBlur} onClick={onItalic} />
-      <div className="mx-1 h-5 w-px bg-zinc-200" />
+      <div className="mx-1 h-5 w-px bg-[var(--edge)]" />
       <ToolbarButton
         label="Text"
         active={blockType === "paragraph"}
@@ -427,8 +427,8 @@ function ToolbarButton({ active = false, label, ...props }) {
       type="button"
       className={`rounded-xl px-2.5 py-1 text-xs font-semibold transition ${
         active
-          ? "bg-[#B7BCE8] text-[#1A1A1A]"
-          : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+          ? "bg-[var(--accent)] text-[var(--foreground)]"
+          : "text-[var(--muted)] hover:bg-[var(--surface-muted)] hover:text-[var(--foreground)]"
       }`}
       {...props}
     >
@@ -574,8 +574,8 @@ function ImageBlock({ block, onFocus, onChange }) {
 
   if (editing) {
     return (
-      <div className="flex items-center gap-2 rounded-lg border border-zinc-200 bg-zinc-50 p-3">
-        <span className="text-xs text-zinc-500">Image URL:</span>
+      <div className="flex items-center gap-2 rounded-lg border border-[var(--edge)] bg-[var(--surface-muted)] p-3">
+        <span className="text-xs text-[var(--muted)]">Image URL:</span>
         <input
           autoFocus
           type="url"
@@ -589,12 +589,12 @@ function ImageBlock({ block, onFocus, onChange }) {
             if (e.key === "Escape") setEditing(false);
           }}
           placeholder="https://example.com/image.png"
-          className="flex-1 rounded border border-zinc-300 px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-accent"
+          className="flex-1 rounded border border-[var(--edge)] px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-accent"
         />
         <button
           type="button"
           onClick={commit}
-          className="rounded bg-accent px-2 py-1 text-xs font-medium text-white hover:bg-accent-hover"
+          className="rounded bg-accent px-2 py-1 text-xs font-medium text-[var(--foreground)] hover:bg-accent-hover"
         >
           Embed
         </button>
@@ -607,7 +607,7 @@ function ImageBlock({ block, onFocus, onChange }) {
   return (
     <div ref={frameRef} className="relative inline-block max-w-full align-top" onClick={onFocus}>
       {!block.content?.url || imageFailed ? (
-        <div className="flex min-h-48 w-full items-center justify-center rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 px-4 text-sm text-zinc-500">
+        <div className="flex min-h-48 w-full items-center justify-center rounded-2xl border border-dashed border-[var(--edge)] bg-[var(--surface-muted)] px-4 text-sm text-[var(--muted)]">
           {block.content?.url ? "Image could not be loaded." : "Add an image URL to display this block."}
         </div>
       ) : (
@@ -621,7 +621,7 @@ function ImageBlock({ block, onFocus, onChange }) {
             alt={block.content?.alt ?? ""}
             width={displaySize.width}
             height={displaySize.height}
-            className="block rounded-2xl border border-zinc-200 bg-white object-contain"
+            className="block rounded-2xl border border-[var(--edge)] bg-[var(--surface)] object-contain"
             style={{
               width: `${displaySize.width}px`,
               height: `${displaySize.height}px`,
@@ -642,7 +642,7 @@ function ImageBlock({ block, onFocus, onChange }) {
           <button
             type="button"
             onMouseDown={handleResizeStart}
-            className="absolute bottom-2 right-2 h-4 w-4 cursor-se-resize rounded-sm border border-white/90 bg-black/60 text-transparent transition hover:bg-black/75"
+            className="absolute bottom-2 right-2 h-4 w-4 cursor-se-resize rounded-sm border border-[color:color-mix(in_srgb,var(--surface)_90%,transparent)] bg-[color:color-mix(in_srgb,var(--foreground)_55%,transparent)] text-transparent transition hover:bg-[color:color-mix(in_srgb,var(--foreground)_72%,transparent)]"
             aria-label="Resize image"
             title="Resize image"
           />
@@ -651,7 +651,7 @@ function ImageBlock({ block, onFocus, onChange }) {
       <button
         type="button"
         onClick={() => setEditing(true)}
-        className="absolute right-2 top-2 rounded bg-black/40 px-2 py-0.5 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100"
+        className="absolute right-2 top-2 rounded bg-[color:color-mix(in_srgb,var(--foreground)_38%,transparent)] px-2 py-0.5 text-xs text-[var(--surface)] opacity-0 transition-opacity group-hover:opacity-100"
       >
         Edit URL
       </button>
@@ -715,14 +715,14 @@ function getEditableClass(type) {
   const base = "break-words";
   switch (type) {
     case "heading_1":
-      return `${base} text-3xl font-bold text-zinc-900 leading-tight`;
+      return `${base} text-3xl font-semibold leading-tight tracking-[-0.03em] text-[var(--foreground)]`;
     case "heading_2":
-      return `${base} text-xl font-semibold text-zinc-800 leading-snug`;
+      return `${base} text-xl font-semibold leading-snug tracking-[-0.02em] text-[var(--foreground)]`;
     case "todo":
-      return `${base} text-sm text-zinc-700`;
+      return `${base} text-sm leading-relaxed text-[var(--foreground)]`;
     case "code":
-      return `${base} rounded-md bg-zinc-100 px-3 py-2 font-mono text-sm text-zinc-800 whitespace-pre-wrap`;
+      return `${base} whitespace-pre-wrap rounded-md bg-[var(--surface-muted)] px-3 py-2 font-mono text-sm text-[var(--foreground)]`;
     default:
-      return `${base} text-sm text-zinc-700 leading-relaxed`;
+      return `${base} text-sm leading-relaxed text-[var(--foreground)]`;
   }
 }

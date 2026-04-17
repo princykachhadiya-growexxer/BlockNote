@@ -786,7 +786,7 @@ export default function BlockEditor({ docId, initialTitle, shareToken }) {
 
   if (loading) {
     return (
-      <div className="flex flex-1 items-center justify-center text-sm text-zinc-500">
+      <div className="flex flex-1 items-center justify-center text-sm text-[var(--muted)]">
         Loading document…
       </div>
     );
@@ -801,11 +801,11 @@ export default function BlockEditor({ docId, initialTitle, shareToken }) {
   }
 
   return (
-    <div className="flex flex-1 flex-col">
-      <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-zinc-200 bg-white/90 px-6 py-3 backdrop-blur">
+    <div className="flex flex-1 flex-col text-[var(--foreground)]">
+      <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-[var(--edge)] bg-[color:color-mix(in_srgb,var(--surface)_88%,transparent)] px-6 py-3 backdrop-blur">
         <a
           href="/dashboard"
-          className="mr-2 rounded p-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600"
+          className="mr-2 rounded-xl p-1.5 text-[var(--muted)] hover:bg-[var(--surface-muted)] hover:text-[var(--foreground)]"
           title="Back to dashboard"
         >
           ←
@@ -822,7 +822,7 @@ export default function BlockEditor({ docId, initialTitle, shareToken }) {
           value={title}
           onChange={handleTitleChange}
           placeholder="Untitled"
-          className="mb-8 w-full bg-transparent text-4xl font-bold text-zinc-900 placeholder:text-zinc-300 outline-none"
+          className="mb-10 w-full rounded-[1.75rem] border border-[var(--edge)] bg-[color:color-mix(in_srgb,var(--surface)_72%,transparent)] px-5 py-4 text-4xl font-semibold tracking-[-0.03em] text-[var(--foreground)] shadow-[0_18px_45px_rgba(20,28,45,0.08)] outline-none placeholder:text-[var(--muted)] focus:border-[var(--accent)] focus:bg-[var(--surface)] focus:shadow-[0_0_0_4px_color-mix(in_srgb,var(--accent)_22%,transparent),0_18px_45px_rgba(20,28,45,0.08)] md:text-5xl"
         />
 
         <div className="space-y-1">
@@ -832,16 +832,18 @@ export default function BlockEditor({ docId, initialTitle, shareToken }) {
               onDragOver={(e) => handleDragOver(e, block.id)}
               onDrop={(e) => handleDrop(e, block.id)}
               className={`group/row relative flex items-start gap-2 rounded-2xl px-2 py-1 transition ${
-                dropTarget?.id === block.id ? "bg-[#D1E9F6]/35" : ""
+                dropTarget?.id === block.id
+                  ? "bg-[color:color-mix(in_srgb,var(--accent-light)_70%,transparent)]"
+                  : ""
               }`}
             >
               {dropTarget?.id === block.id &&
               dropTarget.position === "before" ? (
-                <div className="absolute inset-x-2 top-0 h-0.5 rounded-full bg-[#2D2D2D]" />
+                <div className="absolute inset-x-2 top-0 h-0.5 rounded-full bg-[var(--foreground)]" />
               ) : null}
               {dropTarget?.id === block.id &&
               dropTarget.position === "after" ? (
-                <div className="absolute inset-x-2 bottom-0 h-0.5 rounded-full bg-[#2D2D2D]" />
+                <div className="absolute inset-x-2 bottom-0 h-0.5 rounded-full bg-[var(--foreground)]" />
               ) : null}
 
               <button
@@ -849,7 +851,7 @@ export default function BlockEditor({ docId, initialTitle, shareToken }) {
                 draggable
                 onDragStart={(e) => handleDragStart(e, block.id)}
                 onDragEnd={handleDragEnd}
-                className="mt-0.5 flex shrink-0 cursor-grab items-center rounded-lg p-1 text-zinc-400 opacity-0 transition hover:bg-zinc-100 hover:text-zinc-700 group-hover/row:opacity-100 active:cursor-grabbing"
+                className="mt-0.5 flex shrink-0 cursor-grab items-center rounded-lg p-1 text-[var(--muted)] opacity-0 transition hover:bg-[var(--surface-muted)] hover:text-[var(--foreground)] group-hover/row:opacity-100 active:cursor-grabbing"
                 aria-label="Drag block"
               >
                 <svg
@@ -872,8 +874,8 @@ export default function BlockEditor({ docId, initialTitle, shareToken }) {
                 disabled={togglingStarIds.includes(block.id)}
                 className={`mt-0.5 flex shrink-0 items-center rounded-lg p-1 transition ${
                   block.isStarred
-                    ? "text-[#1A1A1A] opacity-100"
-                    : "text-zinc-400 opacity-0 hover:bg-zinc-100 hover:text-zinc-700 group-hover/row:opacity-100"
+                    ? "text-[var(--foreground)] opacity-100"
+                    : "text-[var(--muted)] opacity-0 hover:bg-[var(--surface-muted)] hover:text-[var(--foreground)] group-hover/row:opacity-100"
                 } disabled:opacity-60`}
                 aria-label={
                   block.isStarred ? "Remove star from block" : "Star block"
@@ -896,7 +898,7 @@ export default function BlockEditor({ docId, initialTitle, shareToken }) {
                 disabled={
                   creatingAfterId === block.id || creatingAfterId === "__root__"
                 }
-                className="mt-0.5 flex shrink-0 items-center rounded-lg p-1 text-zinc-400 opacity-0 transition hover:bg-zinc-100 hover:text-zinc-700 group-hover/row:opacity-100 disabled:opacity-40"
+                className="mt-0.5 flex shrink-0 items-center rounded-lg p-1 text-[var(--muted)] opacity-0 transition hover:bg-[var(--surface-muted)] hover:text-[var(--foreground)] group-hover/row:opacity-100 disabled:opacity-40"
                 aria-label="Add block below"
               >
                 <svg
@@ -932,7 +934,7 @@ export default function BlockEditor({ docId, initialTitle, shareToken }) {
             )
           }
           disabled={creatingAfterId != null}
-          className="mt-4 flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 disabled:opacity-50"
+          className="mt-4 flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm text-[var(--muted)] hover:bg-[var(--surface-muted)] hover:text-[var(--foreground)] disabled:opacity-50"
         >
           <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
             <path d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" />
@@ -942,7 +944,7 @@ export default function BlockEditor({ docId, initialTitle, shareToken }) {
       </main>
 
       {toast && (
-        <div className="pointer-events-none fixed bottom-6 right-6 z-50 rounded-2xl bg-[#2D2D2D] px-4 py-3 text-sm font-medium text-white shadow-xl">
+        <div className="pointer-events-none fixed bottom-6 right-6 z-50 rounded-2xl border border-[var(--edge)] bg-[var(--surface)] px-4 py-3 text-sm font-medium text-[var(--foreground)] shadow-xl">
           {toast}
         </div>
       )}

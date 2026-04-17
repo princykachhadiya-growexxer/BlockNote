@@ -88,7 +88,7 @@ select {
 
 input::placeholder,
 textarea::placeholder {
-  color: #71717a;
+  color: var(--muted);
 }
 
 input:-webkit-autofill,
@@ -103,7 +103,7 @@ input:-webkit-autofill:focus {
    Using :empty + :not(:focus) to avoid flicker during typing.             */
 [contenteditable][data-placeholder]:empty::before {
   content: attr(data-placeholder);
-  color: #a1a1aa; /* zinc-400 */
+  color: var(--muted);
   pointer-events: none;
   position: absolute;
   top: 0;
@@ -112,7 +112,7 @@ input:-webkit-autofill:focus {
 
 [contenteditable][data-placeholder]:empty:focus::before {
   content: attr(data-placeholder);
-  color: #d4d4d8; /* zinc-300 — dimmer when focused */
+  color: color-mix(in srgb, var(--muted) 72%, var(--foreground) 28%);
 }
 
 /* Make contenteditable outline invisible — we handle focus styles ourselves */
