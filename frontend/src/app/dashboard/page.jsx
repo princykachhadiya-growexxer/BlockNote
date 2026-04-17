@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { authFetch } from "@/lib/browser-auth";
 import { useAuth } from "@/components/providers/AuthProvider";
 import {
@@ -64,6 +64,8 @@ const statCards = [
     tone: "bg-[#E1F0D7]/80",
   },
 ];
+
+const DOCUMENTS_PER_PAGE = 4;
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -301,6 +303,7 @@ export default function DashboardPage() {
   const [editTitle, setEditTitle] = useState("");
   const [pendingStarIds, setPendingStarIds] = useState([]);
   const [pendingTrashIds, setPendingTrashIds] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
 
   // ── Filters (all logic isolated in hook) ─────────────────────────────────
   const {
@@ -448,6 +451,38 @@ export default function DashboardPage() {
     await load();
   }
 
+  const allDocuments = analytics?.documents ?? [];
+  const sortedFilteredDocuments = useMemo(
+    () =>
+      [...filteredDocuments].sort((a, b) => {
+        const aPinned = pinnedIds.has(a.id);
+        const bPinned = pinnedIds.has(b.id);
+
+        if (aPinned === bPinned) return 0;
+        return aPinned ? -1 : 1;
+      }),
+    [filteredDocuments, pinnedIds],
+  );
+  const totalPages = Math.max(
+    1,
+    Math.ceil(sortedFilteredDocuments.length / DOCUMENTS_PER_PAGE),
+  );
+  const paginatedDocuments = useMemo(() => {
+    const startIndex = (currentPage - 1) * DOCUMENTS_PER_PAGE;
+    return sortedFilteredDocuments.slice(
+      startIndex,
+      startIndex + DOCUMENTS_PER_PAGE,
+    );
+  }, [currentPage, sortedFilteredDocuments]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchRaw, dateRange, selectedBlockTypes, showPinnedOnly]);
+
+  useEffect(() => {
+    setCurrentPage((page) => Math.min(page, totalPages));
+  }, [totalPages]);
+
   // ── Loading state (unchanged) ─────────────────────────────────────────────
 
   if (analytics == null && !loadError) {
@@ -457,8 +492,6 @@ export default function DashboardPage() {
       </div>
     );
   }
-
-  const allDocuments = analytics?.documents ?? [];
 
   // ── Render ────────────────────────────────────────────────────────────────
 
@@ -580,16 +613,9 @@ export default function DashboardPage() {
             </div>
           ) : (
             /* Document grid */
-            <div className="mt-6 grid gap-4 lg:grid-cols-2">
-              {[...filteredDocuments]
-                .sort((a, b) => {
-                  const aPinned = pinnedIds.has(a.id);
-                  const bPinned = pinnedIds.has(b.id);
-
-                  if (aPinned === bPinned) return 0; // keep original order
-                  return aPinned ? -1 : 1; // pinned first
-                })
-                .map((doc) => {
+            <>
+              <div className="mt-6 grid gap-4 lg:grid-cols-2">
+                {paginatedDocuments.map((doc) => {
                   const isPinned = pinnedIds.has(doc.id);
                   return (
                     <article
@@ -765,14 +791,73 @@ export default function DashboardPage() {
                     </article>
                   );
                 })}
-            </div>
+              </div>
+
+              {sortedFilteredDocuments.length > DOCUMENTS_PER_PAGE && (
+                <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-[1.5rem] border border-[var(--edge)] bg-[var(--surface)] px-4 py-3 shadow-[0_12px_36px_rgba(74,83,120,0.06)]">
+                  <p className="text-sm text-[var(--muted)]">
+                    Page {currentPage} of {totalPages}
+                  </p>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                      disabled={currentPage === 1}
+                      className="inline-flex items-center justify-center rounded-2xl border border-[var(--edge)] bg-[var(--surface)] px-4 py-2 text-sm font-semibold text-[var(--foreground)] transition hover:bg-[var(--surface-muted)] disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      Previous
+                    </button>
+
+                    {Array.from({ length: totalPages }, (_, index) => index + 1).map(
+                      (pageNumber) => (
+                        <button
+                          key={pageNumber}
+                          type="button"
+                          onClick={() => setCurrentPage(pageNumber)}
+                          aria-current={currentPage === pageNumber ? "page" : undefined}
+                          className={`inline-flex h-10 w-10 items-center justify-center rounded-2xl border text-sm font-semibold transition ${
+                            currentPage === pageNumber
+                              ? "border-[#2D2D2D] bg-[#2D2D2D] text-white"
+                              : "border-[var(--edge)] bg-[var(--surface)] text-[var(--foreground)] hover:bg-[var(--surface-muted)]"
+                          }`}
+                        >
+                          {pageNumber}
+                        </button>
+                      ),
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setCurrentPage((page) => Math.min(totalPages, page + 1))
+                      }
+                      disabled={currentPage === totalPages}
+                      className="inline-flex items-center justify-center rounded-2xl border border-[var(--edge)] bg-[var(--surface)] px-4 py-2 text-sm font-semibold text-[var(--foreground)] transition hover:bg-[var(--surface-muted)] disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
 
           {/* ── Results summary when filters are active ── */}
           {activeFilterCount > 0 && allDocuments.length > 0 && (
             <p className="mt-4 text-xs text-[var(--muted)]">
-              Showing {filteredDocuments.length} of {allDocuments.length}{" "}
-              document
+              Showing{" "}
+              {sortedFilteredDocuments.length === 0
+                ? 0
+                : (currentPage - 1) * DOCUMENTS_PER_PAGE + 1}{" "}
+              to{" "}
+              {Math.min(
+                currentPage * DOCUMENTS_PER_PAGE,
+                sortedFilteredDocuments.length,
+              )}{" "}
+              of {sortedFilteredDocuments.length} filtered document
+              {sortedFilteredDocuments.length !== 1 ? "s" : ""} from{" "}
+              {allDocuments.length} total document
               {allDocuments.length !== 1 ? "s" : ""}
             </p>
           )}
