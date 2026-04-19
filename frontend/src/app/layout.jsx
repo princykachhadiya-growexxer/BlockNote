@@ -18,6 +18,9 @@ const poppins = Poppins({
 export const metadata = {
   title: "BlockNote",
   description: "A simplified Notion-like block editor for writing, organizing, and sharing documents.",
+  icons: {
+    icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='16' fill='%2318181B'/><text x='50' y='72' font-size='60' font-family='Inter,sans-serif' font-weight='700' fill='white' text-anchor='middle'>B</text></svg>",
+  },
 };
 
 export default function RootLayout({ children }) {
