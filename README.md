@@ -13,8 +13,7 @@ A block-based document workspace where users can create, edit, organise, and sha
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
 [![Docker](https://img.shields.io/badge/Docker-ready-2496ED?style=flat-square&logo=docker&logoColor=white)](https://docker.com)
 
-[Live Demo]([https://block-note-ia8421z5e-princykachhadiya-growexxers-projects.vercel.app](https://block-note-ruddy.vercel.app/))
-
+[Live Demo](https://block-note-ruddy.vercel.app)
 </div>
 
 <hr style="border: none; height: 3px; background-color: #41464e; margin: 32px 0;">
