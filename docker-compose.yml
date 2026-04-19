@@ -1,19 +1,71 @@
-# services:
-#   postgres:
-#     image: postgres:16-alpine
-#     environment:
-#       POSTGRES_USER: blocknote
-#       POSTGRES_PASSWORD: blocknote
-#       POSTGRES_DB: blocknote
-#     ports:
-#       - "5432:5432"
-#     volumes:
-#       - blocknote_pg:/var/lib/postgresql/data
-#     healthcheck:
-#       test: ["CMD-SHELL", "pg_isready -U blocknote -d blocknote"]
-#       interval: 5s
-#       timeout: 5s
-#       retries: 5
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    env_file:
+      - ./.env
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-blocknote}
+      POSTGRES_USER: ${POSTGRES_USER:-blocknote}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-blocknote}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-blocknote} -d ${POSTGRES_DB:-blocknote}",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - app_network
 
-# volumes:
-#   blocknote_pg:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: on-failure
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: postgresql://${POSTGRES_USER:-blocknote}:${POSTGRES_PASSWORD:-blocknote}@postgres:5432/${POSTGRES_DB:-blocknote}?schema=public
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-replace-with-long-random-secret}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-replace-with-different-long-random-secret}
+    ports:
+      - "${BACKEND_PORT:-4000}:4000"
+    networks:
+      - app_network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        API_PROXY_TARGET: ${API_PROXY_TARGET:-http://backend:4000}
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_started
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      API_PROXY_TARGET: ${API_PROXY_TARGET:-http://backend:4000}
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    networks:
+      - app_network
+
+volumes:
+  postgres_data:
+
+networks:
+  app_network:
+    driver: bridge
